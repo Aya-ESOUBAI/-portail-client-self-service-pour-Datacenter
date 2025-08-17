@@ -1,0 +1,35 @@
+<svg width="200" height="120" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Triangle équilatéral avec contour épais -->
+  <polygon points="100,25 160,85 40,85" fill="none" stroke="#1e3a8a" stroke-width="4"/>
+  
+  <!-- Motif d'empreinte digitale stylisé à l'intérieur du triangle -->
+  <g transform="translate(100,55)">
+    <!-- Centre de l'empreinte (whorl central) -->
+    <ellipse cx="0" cy="0" rx="8" ry="6" fill="#0ea5e9"/>
+    <ellipse cx="0" cy="0" rx="6" ry="4" fill="#1e3a8a"/>
+    
+    <!-- Spirales de l'empreinte -->
+    <path d="M-18,-12 Q-6,-6 0,0 Q6,6 18,12" stroke="#0ea5e9" stroke-width="2.5" fill="none"/>
+    <path d="M-15,-10 Q-4,-4 0,0 Q4,4 15,10" stroke="#1e3a8a" stroke-width="2" fill="none"/>
+    <path d="M-12,-8 Q-3,-3 0,0 Q3,3 12,8" stroke="#0ea5e9" stroke-width="1.5" fill="none"/>
+    
+    <!-- Lignes de l'empreinte (ridges) -->
+    <line x1="-25" y1="-6" x2="-12" y2="-6" stroke="#1e3a8a" stroke-width="1.5"/>
+    <line x1="-22" y1="-3" x2="-9" y2="-3" stroke="#0ea5e9" stroke-width="1.5"/>
+    <line x1="-19" y1="0" x2="-6" y2="0" stroke="#1e3a8a" stroke-width="1.5"/>
+    <line x1="-16" y1="3" x2="-3" y2="3" stroke="#0ea5e9" stroke-width="1.5"/>
+    <line x1="-13" y1="6" x2="0" y2="6" stroke="#1e3a8a" stroke-width="1.5"/>
+    
+    <line x1="12" y1="-6" x2="25" y2="-6" stroke="#1e3a8a" stroke-width="1.5"/>
+    <line x1="9" y1="-3" x2="22" y2="-3" stroke="#0ea5e9" stroke-width="1.5"/>
+    <line x1="6" y1="0" x2="19" y2="0" stroke="#1e3a8a" stroke-width="1.5"/>
+    <line x1="3" y1="3" x2="16" y2="3" stroke="#0ea5e9" stroke-width="1.5"/>
+    <line x1="0" y1="6" x2="13" y2="6" stroke="#1e3a8a" stroke-width="1.5"/>
+  </g>
+  
+  <!-- Texte DATA SERVE en majuscules -->
+  <text x="100" y="105" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#1e3a8a">DATA SERVE</text>
+  
+  <!-- Texte du ministère -->
+  <text x="100" y="118" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1e3a8a">MINISTÈRE DE L'ÉCONOMIE ET DES FINANCES DU MAROC</text>
+</svg> 

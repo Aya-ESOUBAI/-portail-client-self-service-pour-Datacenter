@@ -1,0 +1,339 @@
+.rack-visualization {
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.rack-visualization.dark {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+.rack-visualization.light {
+  background-color: #f5f5f5;
+  color: #333333;
+}
+
+.racks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.rack-container {
+  background: var(--card-bg, #ffffff);
+  border: 2px solid var(--border-color, #e0e0e0);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rack-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dark .rack-container {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+/* En-tête du rack */
+.rack-header {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  padding: 15px;
+  text-align: center;
+}
+
+.rack-name {
+  font-size: 1.4em;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.rack-location {
+  font-size: 0.9em;
+  opacity: 0.9;
+  margin-bottom: 10px;
+}
+
+.temperature-display {
+  display: flex;
+  justify-content: space-around;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.temp-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 12px;
+  border-radius: 6px;
+  min-width: 100px;
+}
+
+.temp-label {
+  font-size: 0.8em;
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+
+.temp-value {
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+
+
+/* Corps du rack */
+.rack-body {
+  display: flex;
+  min-height: 200px;
+  background: var(--rack-bg, #f8f9fa);
+}
+
+.dark .rack-body {
+  background: #3a3a3a;
+}
+
+/* PDU Sections */
+.pdu-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  border-right: 1px solid var(--border-color, #e0e0e0);
+}
+
+.pdu-right {
+  border-right: none;
+  border-left: 1px solid var(--border-color, #e0e0e0);
+}
+
+.pdu-header {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.pdu-title {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: var(--primary-color, #667eea);
+  margin-bottom: 5px;
+}
+
+.pdu-info {
+  font-size: 0.8em;
+  color: var(--text-secondary, #666);
+  opacity: 0.8;
+}
+
+.dark .pdu-info {
+  color: #aaa;
+}
+
+/* Blocs PDU */
+.pdu-blocks {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.block-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--block-bg, #ffffff);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 8px;
+  padding: 10px;
+  min-height: 60px;
+}
+
+.dark .block-section {
+  background: #4a4a4a;
+  border-color: #555;
+}
+
+.block-label {
+  font-size: 0.9em;
+  font-weight: bold;
+  color: var(--text-primary, #333);
+  margin-bottom: 8px;
+}
+
+.dark .block-label {
+  color: #fff;
+}
+
+.intensity-display {
+  font-size: 1.2em;
+  font-weight: bold;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-align: center;
+  min-width: 80px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Centre du rack */
+.rack-center {
+  width: 2px;
+  background: var(--center-line, #ddd);
+  margin: 0 10px;
+  position: relative;
+}
+
+.rack-vertical-line {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, var(--center-line, #ddd), transparent);
+}
+
+.dark .rack-center {
+  background: #555;
+}
+
+.dark .rack-vertical-line {
+  background: linear-gradient(to bottom, transparent, #555, transparent);
+}
+
+/* Pied du rack */
+.rack-footer {
+  background: var(--footer-bg, #f1f3f4);
+  padding: 10px 15px;
+  border-top: 1px solid var(--border-color, #e0e0e0);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8em;
+}
+
+.dark .rack-footer {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+.rack-direction {
+  color: var(--text-secondary, #666);
+  font-weight: 500;
+}
+
+.dark .rack-direction {
+  color: #aaa;
+}
+
+
+
+/* États de chargement et d'erreur */
+.rack-visualization-loading,
+.rack-visualization-error,
+.rack-visualization-empty {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.1em;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.rack-visualization-error {
+  color: #e74c3c;
+}
+
+.dark .rack-visualization-error {
+  color: #ff6b6b;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .racks-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .rack-container {
+    margin: 10px;
+  }
+  
+  .temperature-display {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .temp-item {
+    min-width: auto;
+  }
+  
+
+  
+  .rack-body {
+    flex-direction: column;
+    min-height: auto;
+  }
+  
+  .pdu-section {
+    border-right: none;
+    border-bottom: 1px solid var(--border-color, #e0e0e0);
+  }
+  
+  .pdu-right {
+    border-left: none;
+    border-bottom: none;
+  }
+  
+  .rack-center {
+    width: 100%;
+    height: 2px;
+    margin: 10px 0;
+  }
+  
+  .rack-footer {
+    flex-direction: column;
+    gap: 5px;
+    text-align: center;
+  }
+}
+
+/* Variables CSS pour le thème */
+:root {
+  --card-bg: #ffffff;
+  --rack-bg: #f8f9fa;
+  --block-bg: #ffffff;
+  --footer-bg: #f1f3f4;
+  --border-color: #e0e0e0;
+  --center-line: #ddd;
+  --primary-color: #3b82f6;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+}
+
+.dark {
+  --card-bg: #2d2d2d;
+  --rack-bg: #3a3a3a;
+  --block-bg: #4a4a4a;
+  --footer-bg: #2a2a2a;
+  --border-color: #444444;
+  --center-line: #555555;
+  --primary-color: #60a5fa;
+  --text-primary: #ffffff;
+  --text-secondary: #aaaaaa;
+}

@@ -1,0 +1,1 @@
+// Ce composant a été supprimé car le mode sombre/clair n'est plus disponible.
