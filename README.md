@@ -1,171 +1,113 @@
-# 🏢 Système de Gestion de Datacenter
+#  Portail Client Self-Service pour Datacenter
 
-Un système complet de surveillance et de gestion de datacenter avec authentification, gestion des racks, capteurs, et alertes automatiques.
+Un système complet de gestion et de surveillance de datacenter avec interface moderne et sécurisée.
 
-## 🚀 Fonctionnalités Principales
+## Fonctionnalités Principales
 
-### 👥 **Authentification et Rôles**
-- **Admin**: Accès complet à toutes les fonctionnalités
-- **Direction**: Vue limitée à leurs racks et données
-- Gestion des profils utilisateurs avec numéro de téléphone
+###  Gestion des Utilisateurs
+- **Rôles** : Admin et Direction
+- Authentification sécurisée
+- Gestion des profils utilisateurs
+- Tableau de bord personnalisé par rôle
 
-### 🖥️ **Gestion des Racks**
-- Ajout/suppression de racks (Admin)
-- Association avec les directions
-- Visualisation détaillée des composants
-- Gestion des PDU et armoires de climatisation
+###  Gestion des Équipements
+- Gestion complète des racks
+- Suivi des équipements (PDU, climatisation)
+- Visualisation en temps réel
+- Historique des données
 
-### 📊 **Surveillance des Capteurs**
-- Capteurs de température et humidité
-- Capteurs électriques (consommation, tension)
-- Données en temps réel
-- Historique des mesures
+###  Surveillance en Temps Réel
+- Température et humidité
+- Consommation électrique
+- État des équipements
+- Alertes personnalisables
 
-### 🚨 **Système d'Alertes Automatiques**
-- Surveillance en temps réel des seuils critiques
-- Notifications par email (Mailgun) et SMS (Twilio)
-- Prévention du spam (10 minutes entre alertes)
-- Historique des notifications
-
-### 📋 **Gestion des Demandes**
-- Système de tickets pour les demandes
-- Upload de justificatifs
-- Suivi des statuts
-- Génération de PDF
-
-## 🛠️ Installation
+## Installation
 
 ### Prérequis
-- XAMPP (Apache + MySQL + PHP)
-- Node.js et npm
-- Comptes Mailgun et Twilio (pour les alertes)
+- Serveur web (Apache/Nginx)
+- PHP 8.0+
+- MySQL 5.7+
+- Node.js 16+
+- Comptes Mailgun et Twilio (optionnel pour les notifications)
 
-### 1. Configuration de la base de données
+### Configuration Initiale
+
+1. **Base de données**
 ```bash
 # Importer le schéma
-mysql -u root -p < data.sql
-
-# Créer les utilisateurs de test
-php backend/create_users.php
-
-# Mettre à jour la base pour les alertes
-php backend/update_database.php
-
-# Configurer les seuils critiques
-php backend/config_seuils_critiques.php
+mysql -u root -p < database_complete.sql
 ```
 
-### 2. Configuration des services externes
-Éditez `backend/config_notifications.php` :
-```php
-define('MAILGUN_API_KEY', 'votre-clé-api-mailgun');
-define('MAILGUN_DOMAIN', 'votre-domaine-mailgun.com');
-define('TWILIO_ACCOUNT_SID', 'votre-account-sid-twilio');
-define('TWILIO_AUTH_TOKEN', 'votre-auth-token-twilio');
-define('TWILIO_PHONE_NUMBER', 'votre-numéro-twilio');
+2. **Configuration du Backend**
+Copiez le fichier de configuration exemple :
+```bash
+cp backend/config.example.php backend/config.php
 ```
 
-### 3. Installation du frontend
+Éditez `backend/config.php` avec vos paramètres de base de données.
+
+3. **Installation du Frontend**
 ```bash
 cd frontend
 npm install
-npm start
+npm run build
 ```
 
-## 👤 **Comptes de Test**
+## Démarrage
 
-### Admin
-- **Email**: `admin@datacenter.com`
-- **Mot de passe**: `admin123`
+1. Démarrer le serveur web
+2. Accéder à l'application via votre navigateur
+3. Se connecter avec les identifiants par défaut :
+   - **Admin** : admin@techcorp.fr / password
+   - **Direction** : jean.dupont@techcorp.fr / password
 
-### Direction
-- **Email**: `direction@datacenter.com`
-- **Mot de passe**: `direction123`
-
-## 📁 **Structure du Projet**
+## Structure du Projet
 
 ```
+.
 ├── backend/                 # API PHP
-│   ├── config.php          # Configuration DB
-│   ├── auth.php            # Authentification
-│   ├── routes.php          # Routes API
-│   ├── surveillance_capteurs.php  # Alertes automatiques
-│   ├── config_notifications.php   # Configuration Mailgun/Twilio
-│   └── uploads/            # Fichiers uploadés
-├── frontend/               # Application React
-│   ├── src/
-│   │   ├── components/     # Composants React
-│   │   ├── pages/         # Pages principales
-│   │   └── services/      # Services API
-├── data.sql               # Schéma de base de données
-└── GUIDE_ALERTES_AUTOMATIQUES.md  # Guide des alertes
+│   ├── config.php          # Configuration
+│   ├── routes.php         # Routes API
+│   └── uploads/           # Fichiers uploadés
+├── frontend/              # Application React
+│   ├── public/           # Fichiers statiques
+│   └── src/              # Code source
+│       ├── components/   # Composants réutilisables
+│       ├── pages/        # Pages de l'application
+│       └── services/     # Appels API
+└── database_complete.sql  # Schéma de la base de données
 ```
 
-## 🔧 **API Endpoints**
+## 🔧 API Endpoints
 
 ### Authentification
-- `POST /login` - Connexion
-- `POST /register` - Inscription
+- `POST /login` - Connexion utilisateur
+- `GET /me` - Profil utilisateur
 
 ### Gestion des Racks
-- `GET /raks-with-directions` - Liste des racks
+- `GET /raks` - Liste des racks
 - `POST /raks` - Créer un rack
-- `DELETE /raks/{id}` - Supprimer un rack
-- `GET /pdus-by-rack/{rackId}` - PDU d'un rack
-- `GET /capteurelectriques-by-rack/{rackId}` - Capteurs électriques
-- `GET /capteurdeclimes-by-rack/{rackId}` - Capteurs climatiques
+- `GET /raks/:id` - Détails d'un rack
+- `PUT /raks/:id` - Mettre à jour un rack
+- `DELETE /raks/:id` - Supprimer un rack
 
-### Alertes Automatiques
-- `POST /check-sensor-thresholds` - Vérifier les seuils
-- `POST /add-critical-threshold` - Ajouter un seuil
-- `GET /notification-history` - Historique des notifications
-- `POST /test-notifications` - Tester les services
+### Surveillance
+- `GET /sensors` - Données des capteurs
+- `GET /alerts` - Historique des alertes
+- `POST /alerts` - Créer une alerte
 
-## 🚨 **Configuration des Alertes**
+## Sécurité
 
-### 1. Configuration du profil
-1. Connectez-vous à votre compte
-2. Allez dans votre profil utilisateur
-3. Ajoutez votre numéro de téléphone
-4. Sauvegardez
+- Authentification par JWT
+- Protection CSRF
+- Validation des entrées
+- Gestion des rôles
+- Chiffrement des données sensibles
 
-### 2. Test du système
-```bash
-php backend/test_alertes_automatiques.php
-```
-
-### 3. Surveillance automatique
-```bash
-# Vérification manuelle
-curl -X POST http://localhost/backend/index.php/check-sensor-thresholds
-
-# Cron job (recommandé)
-*/5 * * * * curl -X POST http://localhost/backend/index.php/check-sensor-thresholds
-```
-
-
-## 🎨 **Interface Utilisateur**
-
-- **Design moderne** avec thème sombre/clair
-- **Responsive** pour tous les appareils
-- **Navigation intuitive** avec rôles
-- **Modales** pour les actions importantes
-
-## 🔒 **Sécurité**
-
-- **Authentification** par token
-- **Validation** des données
-- **Protection CSRF**
-- **Gestion des rôles**
-- **Validation des fichiers uploadés**
-
-## 📞 **Support**
+## Support
 
 Pour toute question ou problème :
-1. Consultez le guide des alertes automatiques
+1. Consultez la documentation technique
 2. Vérifiez les logs d'erreur
-3. Testez les services avec les scripts fournis
-
----
-
-**🎉 Système prêt à l'emploi !** 
+3. Contactez l'équipe support
