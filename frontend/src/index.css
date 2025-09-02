@@ -635,6 +635,27 @@ body {
   text-transform: capitalize;
 }
 
+.delete-user-button {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.delete-user-button:hover {
+  background: linear-gradient(135deg, #ff4757 0%, #ff3737 100%);
+  transform: translateY(-50%) scale(1.1);
+}
+
 /* Messages d'erreur */
 .error-message {
   background: rgba(255, 71, 87, 0.1);
@@ -2498,6 +2519,35 @@ body {
   flex-direction: column;
   gap: 0.25rem;
   text-align: right;
+  flex: 1;
+  min-width: 0;
+  padding-right: 10px;
+}
+
+.btn-delete {
+  background: transparent;
+  border: none;
+  color: #ff4444;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 5px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  opacity: 0.7;
+  margin-left: auto;
+}
+
+.btn-delete:hover {
+  background: rgba(255, 68, 68, 0.1);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.btn-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .user-name {

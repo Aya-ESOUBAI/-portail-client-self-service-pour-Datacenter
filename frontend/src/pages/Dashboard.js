@@ -15,6 +15,7 @@ function Dashboard() {
   const [error, setError] = useState('');
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [deletingUserId, setDeletingUserId] = useState(null);
   
   // États pour les modals
   const [showAddRackModal, setShowAddRackModal] = useState(false);
@@ -108,6 +109,27 @@ function Dashboard() {
     setShowDeleteRackModal(false);
     setSelectedRack(null);
     loadDashboardData(); // Recharger les données
+  };
+
+  // Fonction pour supprimer un utilisateur
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.')) {
+      return;
+    }
+    
+    try {
+      setDeletingUserId(userId);
+      await api.delete(`/utilisateurs/${userId}`);
+      // Recharger la liste des utilisateurs
+      const usersRes = await api.get('/utilisateurs');
+      setUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
+      setSuccess('Utilisateur supprimé avec succès');
+    } catch (err) {
+      setError('Erreur lors de la suppression de l\'utilisateur');
+      console.error('Erreur suppression utilisateur:', err);
+    } finally {
+      setDeletingUserId(null);
+    }
   };
 
   const handleViewRackDetails = (rack) => {
@@ -225,6 +247,17 @@ function Dashboard() {
                       <div className="user-name">{user.nom}</div>
                       <div className="user-role">{user.role}</div>
                     </div>
+                    <button 
+                      className="btn-delete"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteUser(user.id);
+                      }}
+                      disabled={deletingUserId === user.id}
+                      title="Supprimer l'utilisateur"
+                    >
+                      {deletingUserId === user.id ? 'Suppression...' : '🗑️'}
+                    </button>
                   </div>
                 ))
               )}

@@ -82,22 +82,15 @@ function Alertes() {
     }
   };
 
-  const getStatusColor = (statut) => {
-    switch (statut) {
-      case 'active': return 'red';
-      case 'resolved': return 'green';
-      case 'pending': return 'orange';
-      default: return 'gray';
-    }
-  };
-
-  const getStatusText = (statut) => {
-    switch (statut) {
-      case 'active': return 'Active';
-      case 'resolved': return 'Résolue';
-      case 'pending': return 'En attente';
-      default: return 'Inconnu';
-    }
+  // Fonction utilitaire pour obtenir la date formatée
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const getTypeIcon = (type) => {
@@ -114,10 +107,33 @@ function Alertes() {
   };
 
   const formatAlertMessage = (alert) => {
-    if (alert.valeur_detectee && alert.seuil_critique) {
-      return `${alert.type}: Valeur détectée ${alert.valeur_detectee}, Seuil critique ${alert.seuil_critique}`;
+    let message = [];
+    
+    // Ajouter le message principal s'il existe
+    if (alert.message) {
+      message.push(alert.message);
     }
-    return alert.type;
+    
+    // Ajouter les détails de la valeur détectée et du seuil si disponibles
+    if (alert.valeur_detectee !== undefined) {
+      message.push(`Valeur détectée: ${alert.valeur_detectee}`);
+    }
+    
+    if (alert.seuil_critique !== undefined) {
+      message.push(`Seuil critique: ${alert.seuil_critique}`);
+    }
+    
+    // Si l'alerte est liée à un rack
+    if (alert.rack_nom) {
+      message.push(`Rack: ${alert.rack_nom}`);
+    }
+    
+    // Si aucun message n'a été construit, utiliser une valeur par défaut
+    if (message.length === 0) {
+      message.push('Aucun détail disponible');
+    }
+    
+    return message.join(' • ');
   };
 
   return (
@@ -173,12 +189,12 @@ function Alertes() {
                   <div key={alerte.id} className="alerte-card">
                     <div className="alerte-header">
                       <div className="alerte-type">
-                        <span className={`status-indicator ${getStatusColor(alerte.statut)}`}>
-                          ● {getStatusText(alerte.statut)}
+                        <span className="alert-indicator">
+                          ⚠️ Alerte
                         </span>
                       </div>
                       <div className="alerte-date">
-                        {new Date(alerte.date_creation).toLocaleString()}
+                        {formatDate(alerte.date_creation)}
                       </div>
                     </div>
                     <div className="alerte-content">
@@ -285,8 +301,7 @@ function Alertes() {
                       </div>
                       <div className="threshold-content">
                         <p><strong>Seuil:</strong> {threshold.valeur_seuil} {threshold.unite}</p>
-                        <p><strong>Description:</strong> {threshold.description}</p>
-                        <p><strong>Créé le:</strong> {new Date(threshold.date_creation).toLocaleString()}</p>
+                        <p><strong>Message:</strong> {threshold.message || 'Aucun message'}</p>
                       </div>
                     </div>
                   ))}

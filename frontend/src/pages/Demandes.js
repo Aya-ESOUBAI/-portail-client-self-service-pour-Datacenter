@@ -32,16 +32,39 @@ function Demandes() {
     try {
       setLoading(true);
       const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      console.log('Utilisateur courant:', currentUser);
       
       if (currentUser.role === 'Admin') {
         // Pour les admins, charger toutes les données
+        console.log('Chargement des demandes pour admin');
         const [demandesRes, statsRes, directionRes] = await Promise.all([
-          api.get('/demandes'),
-          api.get('/demandes-stats'),
-          api.get('/demandes-by-direction')
+          api.get('/demandes').catch(err => {
+            console.error('Erreur lors de la récupération des demandes:', err);
+            return { data: [] };
+          }),
+          api.get('/demandes-stats').catch(err => {
+            console.error('Erreur lors de la récupération des stats:', err);
+            return { data: [] };
+          }),
+          api.get('/demandes-by-direction').catch(err => {
+            console.error('Erreur lors de la récupération des demandes par direction:', err);
+            return { data: [] };
+          })
         ]);
         
-        setDemandes(Array.isArray(demandesRes.data) ? demandesRes.data : []);
+        console.log('Réponse complète de /demandes:', demandesRes);
+        console.log('Données brutes des demandes:', demandesRes.data);
+        
+        // Vérifier si la réponse contient une erreur
+        if (demandesRes.data && demandesRes.data.error) {
+          console.error('Erreur du serveur:', demandesRes.data.error);
+          setError('Erreur lors du chargement des demandes: ' + (demandesRes.data.details || demandesRes.data.error));
+        }
+        
+        const demandes = Array.isArray(demandesRes.data) ? demandesRes.data : [];
+        console.log('Demandes après vérification:', demandes);
+        
+        setDemandes(demandes);
         setStats(Array.isArray(statsRes.data) ? statsRes.data : []);
         setDemandesByDirection(Array.isArray(directionRes.data) ? directionRes.data : []);
       } else if (currentUser.role === 'Direction') {
@@ -383,31 +406,14 @@ function Demandes() {
         </div>
       )}
 
-      {/* Onglets (Admin seulement) */}
-      {userInfo?.role === 'Admin' && (
-        <div className="tabs">
-          <button 
-            className={`tab ${activeTab === 'demandes' ? 'active' : ''}`}
-            onClick={() => setActiveTab('demandes')}
-          >
-            Toutes les Demandes ({demandes.length})
-          </button>
-          <button 
-            className={`tab ${activeTab === 'directions' ? 'active' : ''}`}
-            onClick={() => setActiveTab('directions')}
-          >
-            🏢 Par Direction
-          </button>
-        </div>
-      )}
+      {/* Pas d'onglets nécessaires pour l'admin - Affichage direct de la liste des demandes */}
 
       {/* Messages de succès/erreur */}
       {success && <div className="success-message">{success}</div>}
       {error && <div className="error-message">{error}</div>}
 
-      {/* Onglet Demandes */}
-      {activeTab === 'demandes' && (
-        <div className="demandes-content">
+      {/* Contenu principal des demandes */}
+      <div className="demandes-content">
           <div className="demandes-list">
             <h2>{userInfo?.role === 'Direction' ? 'Mes Demandes' : 'Liste des Demandes'}</h2>
             {loading ? (
@@ -515,51 +521,6 @@ function Demandes() {
         </div>
       )}
 
-      {/* Onglet Par Direction (Admin seulement) */}
-      {userInfo?.role === 'Admin' && activeTab === 'directions' && (
-        <div className="directions-content">
-          <div className="directions-list">
-            <h2>🏢 Demandes par Direction</h2>
-            {loading ? (
-              <div className="loading">Chargement en cours...</div>
-            ) : !demandesByDirection || demandesByDirection.length === 0 ? (
-              <p className="no-data">Aucune donnée disponible</p>
-            ) : (
-              <div className="directions-grid">
-                {demandesByDirection.map(direction => (
-                  <div key={direction.direction_nom} className="direction-card">
-                    <div className="direction-header">
-                      <h3>{direction.direction_nom || 'Sans direction'}</h3>
-                      <div className="direction-total">
-                        Total: {direction.total_demandes}
-                      </div>
-                    </div>
-                    
-                    <div className="direction-stats">
-                      <div className="stat-item">
-                        <span className="stat-label">En attente:</span>
-                        <span className="stat-value orange">{direction.en_attente}</span>
-                      </div>
-                      <div className="stat-item">
-                        <span className="stat-label">Validées:</span>
-                        <span className="stat-value green">{direction.validees}</span>
-                      </div>
-                      <div className="stat-item">
-                        <span className="stat-label">Rejetées:</span>
-                        <span className="stat-value red">{direction.rejetees}</span>
-                      </div>
-                      <div className="stat-item">
-                        <span className="stat-label">Terminées:</span>
-                        <span className="stat-value blue">{direction.terminees}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

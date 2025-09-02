@@ -3,7 +3,10 @@ require_once 'config.php';
 
 function index() {
     $pdo = getPDO();
-    $stmt = $pdo->query('SELECT * FROM alerte ORDER BY date_creation DESC');
+    $stmt = $pdo->query('SELECT a.*, r.nom as rack_nom 
+                        FROM alerte a 
+                        LEFT JOIN rak r ON a.rack_id = r.id 
+                        ORDER BY a.date_creation DESC');
     return $stmt->fetchAll();
 }
 
@@ -16,7 +19,7 @@ function show($id) {
 
 function getAlertThresholds() {
     $pdo = getPDO();
-    $stmt = $pdo->query('SELECT * FROM seuil_alerte ORDER BY type_capteur, valeur_max');
+    $stmt = $pdo->query('SELECT id, type, valeur_seuil, message, rack_id FROM seuil_alerte ORDER BY type, valeur_seuil');
     return $stmt->fetchAll();
 }
 
@@ -31,13 +34,12 @@ function checkCriticalThresholds() {
         // Vérifier les données actuelles selon le type
         $currentValue = getCurrentValue($threshold['type']);
         
-        if ($currentValue !== null && $currentValue > $threshold['valeur_max']) {
+        if ($currentValue !== null && $currentValue > $threshold['valeur_seuil']) {
             // Seuil critique dépassé - créer une alerte et envoyer des notifications
             $alertData = [
-                'type' => $threshold['type_capteur'],
-                'message' => "Seuil critique dépassé: {$currentValue} > {$threshold['valeur_max']}",
-                'statut' => 'active',
-                'rack_id' => $threshold['rack_id']
+                'type' => $threshold['type'],
+                'message' => "Seuil critique dépassé: {$currentValue} > {$threshold['valeur_seuil']} {$threshold['unite']}",
+                'rack_id' => null  // Vous pouvez ajuster cela si nécessaire
             ];
             
             // Créer l'alerte
@@ -167,12 +169,12 @@ function store($data) {
 
 function storeThreshold($data) {
     $pdo = getPDO();
-    $stmt = $pdo->prepare('INSERT INTO seuil_alerte (type, valeur_seuil, unite, description) VALUES (?, ?, ?, ?)');
+    $stmt = $pdo->prepare('INSERT INTO seuil_alerte (type, valeur_seuil, message, rack_id) VALUES (?, ?, ?, ?)');
     $stmt->execute([
         $data['type'],
         $data['valeur_seuil'],
-        $data['unite'],
-        $data['description']
+        $data['message'] ?? null,
+        $data['rack_id'] ?? null
     ]);
     
     // Vérifier immédiatement si le seuil est dépassé

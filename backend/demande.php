@@ -2,15 +2,56 @@
 require_once 'config.php';
 
 function index() {
-    $pdo = getPDO();
-    $stmt = $pdo->query('
-        SELECT d.*, u.nom as utilisateur_nom, dir.nom as direction_nom 
-        FROM demande d 
-        LEFT JOIN utilisateur u ON d.utilisateur_id = u.id 
-        LEFT JOIN direction dir ON d.direction_id = dir.id 
-        ORDER BY d.date_soumission DESC
-    ');
-    return $stmt->fetchAll();
+    try {
+        error_log('Début de la fonction index() pour récupérer les demandes');
+        
+        $pdo = getPDO();
+        
+        // Vérifier la connexion
+        if (!$pdo) {
+            $error = 'Erreur: Impossible de se connecter à la base de données';
+            error_log($error);
+            return ['error' => $error];
+        }
+        
+        $query = '
+            SELECT d.*, u.nom as utilisateur_nom, dir.nom as direction_nom 
+            FROM demande d 
+            LEFT JOIN utilisateur u ON d.utilisateur_id = u.id 
+            LEFT JOIN direction dir ON d.direction_id = dir.id 
+            ORDER BY d.date_soumission DESC
+        ';
+        
+        error_log('Exécution de la requête: ' . $query);
+        
+        $stmt = $pdo->query($query);
+        
+        if (!$stmt) {
+            $error = $pdo->errorInfo();
+            $errorMsg = 'Erreur SQL: ' . print_r($error, true);
+            error_log($errorMsg);
+            return ['error' => $errorMsg];
+        }
+        
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        error_log('Nombre de demandes récupérées: ' . count($result));
+        
+        if (empty($result)) {
+            // Vérifier si la table est vide
+            $countStmt = $pdo->query('SELECT COUNT(*) as count FROM demande');
+            $count = $countStmt->fetch(PDO::FETCH_ASSOC)['count'];
+            error_log('La table demande contient ' . $count . ' enregistrements');
+            
+            if ($count > 0) {
+                error_log('Erreur: La requête ne retourne aucun résultat mais la table contient des données');
+            }
+        }
+        
+        return $result;
+    } catch (PDOException $e) {
+        error_log('Erreur dans index(): ' . $e->getMessage());
+        return [];
+    }
 }
 
 function show($id) {
@@ -215,49 +256,94 @@ function store($data) {
     // Préparer les données pour l'insertion
     $pdfFilename = null;
 
-    // Validation pour les demandes d'accès
-    if ($data['type'] === 'ACCES') {
-        if (empty($data['nom']) || empty($data['prenom']) || empty($data['cin']) || empty($data['date_acces'])) {
-            http_response_code(400);
-            return ['error' => 'Pour les demandes d\'accès, le nom, prénom, CIN et la date d\'accès sont obligatoires'];
-        }
+    // Vérification du type de demande
+    $validTypes = ['INSTALLATION', 'RETRAIT', 'ACCES'];
+    if (!in_array($data['type'], $validTypes)) {
+        http_response_code(400);
+        return ['error' => 'Type de demande invalide. Les types valides sont : ' . implode(', ', $validTypes)];
     }
     
-    // Validation pour les demandes d'installation et retrait
-    if ($data['type'] === 'INSTALLATION' || $data['type'] === 'RETRAIT') {
-        if (empty($data['nom_equipement']) || empty($data['serial_number'])) {
-            http_response_code(400);
-            return ['error' => 'Pour les demandes d\'installation et retrait, le nom d\'équipement et le numéro de série sont obligatoires'];
-        }
+    // Vérification de l'utilisateur
+    if (!$userId) {
+        http_response_code(400);
+        return ['error' => 'Utilisateur non identifié. Veuillez vous connecter.'];
+    }
+    
+    // Vérification de la direction
+    if (!$directionId) {
+        http_response_code(400);
+        return ['error' => 'Direction non trouvée pour cet utilisateur.'];
     }
     
     // Insérer la demande sans PDF
-    $stmt = $pdo->prepare('
-        INSERT INTO demande (type, statut, justificatif_pdf, utilisateur_id, direction_id, nom, prenom, cin, code, date_acces, nom_equipement, serial_number) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ');
-    $stmt->execute([
-        $data['type'],
-        'EN_ATTENTE',
-        null,
-        $userId,
-        $directionId,
-        $data['nom'] ?? null,
-        $data['prenom'] ?? null,
-        $data['cin'] ?? null,
-        $data['code'] ?? null,
-        $data['date_acces'] ?? null,
-        $data['nom_equipement'] ?? null,
-        $data['serial_number'] ?? null
-    ]);
+    try {
+        error_log('Début de la création de la demande');
+        error_log('Données reçues: ' . print_r($data, true));
+        error_log('User ID: ' . $userId);
+        error_log('Direction ID: ' . $directionId);
+        
+        $sql = 'INSERT INTO demande (
+            type, 
+            statut, 
+            utilisateur_id, 
+            direction_id,
+            nom,
+            prenom,
+            cin,
+            date_acces,
+            nom_equipement,
+            serial_number
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        error_log('Requête SQL: ' . $sql);
+        
+        $stmt = $pdo->prepare($sql);
+        $params = [
+            $data['type'],
+            'EN_ATTENTE',
+            $userId,
+            $directionId,
+            $data['nom'] ?? 'Non spécifié',
+            $data['prenom'] ?? 'Non spécifié',
+            $data['cin'] ?? 'Non spécifié',
+            $data['date_acces'] ?? null,
+            $data['nom_equipement'] ?? null,
+            $data['serial_number'] ?? null
+        ];
+        
+        error_log('Paramètres: ' . print_r($params, true));
+        
+        $result = $stmt->execute($params);
 
-    $demandeId = $pdo->lastInsertId();
+        if (!$result) {
+            $errorInfo = $stmt->errorInfo();
+            error_log('Erreur lors de l\'insertion de la demande: ' . print_r($errorInfo, true));
+            http_response_code(500);
+            return ['error' => 'Erreur lors de la création de la demande', 'details' => $errorInfo[2]];
+        }
 
-    // Générer le PDF avec l'ID réel
+        $demandeId = $pdo->lastInsertId();
+        error_log('Nouvelle demande créée avec succès. ID: ' . $demandeId);
+    } catch (PDOException $e) {
+        error_log('Erreur PDO lors de la création de la demande: ' . $e->getMessage());
+        http_response_code(500);
+        return ['error' => 'Erreur de base de données lors de la création de la demande'];
+    }
+
+    // Récupérer les informations de l'utilisateur et de la direction pour le PDF
+    $stmt = $pdo->prepare('SELECT u.nom, u.email, d.nom as direction_nom FROM utilisateur u LEFT JOIN direction d ON u.direction_id = d.id WHERE u.id = ?');
+    $stmt->execute([$userId]);
+    $userInfo = $stmt->fetch();
+
+    // Préparer les données pour le PDF
     $pdfData = array_merge($data, [
         'direction_id' => $directionId,
-        'statut' => 'EN_ATTENTE'
+        'direction_nom' => $userInfo['direction_nom'] ?? 'Inconnue',
+        'utilisateur_nom' => $userInfo['nom'] ?? 'Inconnu',
+        'utilisateur_email' => $userInfo['email'] ?? '',
+        'statut' => 'EN_ATTENTE',
+        'date_soumission' => date('Y-m-d H:i:s')
     ]);
+    
     $generatedPdfFilename = generatePDFForDemande($demandeId, $pdfData);
 
     // Mettre à jour la demande avec le nom du PDF généré

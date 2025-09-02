@@ -1,16 +1,23 @@
 <?php
-// Point d'entrée principal de l'API
-header('Content-Type: application/json');
+// Configuration des en-têtes CORS
+header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: http://localhost:3000');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-Auth-Token');
 header('Access-Control-Allow-Credentials: true');
+header('Access-Control-Max-Age: 86400');
 
-// Gérer les requêtes OPTIONS (preflight)
+// Répondre immédiatement aux requêtes OPTIONS (prévol)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
-    exit;
+    exit();
 }
+
+// Désactiver l'affichage des erreurs en production
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/error.log');
+error_reporting(E_ALL);
 
 require_once 'routes.php';
 
