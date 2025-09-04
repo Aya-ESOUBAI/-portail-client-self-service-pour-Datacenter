@@ -11,7 +11,6 @@ function DeleteRackModal({ isOpen, onClose, rack, onSuccess }) {
     setError('');
 
     try {
-      // Supprimer le rack (les PDU et armoires seront supprimés automatiquement via CASCADE)
       await api.delete(`/raks/${rack.id}`);
       
       onSuccess();

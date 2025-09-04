@@ -33,7 +33,6 @@ function getByRack($rackId) {
 function getEnergyStatsByRack() {
     $pdo = getPDO();
     
-    // Récupérer les paramètres de filtrage
     $startDate = $_GET['start_date'] ?? null;
     $endDate = $_GET['end_date'] ?? null;
     $rackId = $_GET['rack_id'] ?? null;
@@ -41,13 +40,11 @@ function getEnergyStatsByRack() {
     $whereConditions = ['ce.valeur IS NOT NULL'];
     $params = [];
     
-    // Filtre par rack
     if ($rackId) {
         $whereConditions[] = 'r.id = ?';
         $params[] = $rackId;
     }
     
-    // Filtre par date
     if ($startDate && $endDate) {
         $whereConditions[] = 'ce.date_mesure BETWEEN ? AND ?';
         $params[] = $startDate . ' 00:00:00';
@@ -56,7 +53,6 @@ function getEnergyStatsByRack() {
     
     $whereClause = 'WHERE ' . implode(' AND ', $whereConditions);
     
-    // Calcul de l'intensité par block puis par rack (version compatible MySQL)
     $sql = "
         SELECT 
             r.id as rack_id,

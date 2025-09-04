@@ -17,23 +17,19 @@ function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [deletingUserId, setDeletingUserId] = useState(null);
   
-  // États pour les modals
   const [showAddRackModal, setShowAddRackModal] = useState(false);
   const [showDeleteRackModal, setShowDeleteRackModal] = useState(false);
   const [showRackDetailsModal, setShowRackDetailsModal] = useState(false);
   const [selectedRack, setSelectedRack] = useState(null);
 
-  // Fonction pour charger les données du dashboard
   const loadDashboardData = async () => {
     try {
       setLoading(true);
       setError('');
       
-      // Récupérer les informations de l'utilisateur connecté
       const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
       setUserInfo(currentUser);
 
-      // Charger les utilisateurs (seulement pour les admins)
       if (currentUser.role === 'Admin') {
         const usersRes = await api.get('/utilisateurs');
         setUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
@@ -41,26 +37,20 @@ function Dashboard() {
         setUsers([]);
       }
       
-      // Charger les alertes récentes
       const alertsRes = await api.get('/alertes');
       const alertsData = Array.isArray(alertsRes.data) ? alertsRes.data : [];
       setRecentAlerts(alertsData.slice(0, 5)); // 5 dernières alertes
       
-      // Charger les racks selon le rôle de l'utilisateur
       if (currentUser.role === 'Admin') {
-        // Pour les admins, charger tous les racks
         const racksRes = await api.get('/raks-with-directions');
         setRacksWithDirections(Array.isArray(racksRes.data) ? racksRes.data : []);
         
-        // Charger les données complètes des racks pour la visualisation
         const racksCompleteRes = await api.get(`/raks-complete-data/${currentUser.id}`);
         setRacksCompleteData(Array.isArray(racksCompleteRes.data) ? racksCompleteRes.data : []);
       } else if (currentUser.role === 'Direction' && currentUser.id) {
-        // Pour les directions, charger seulement leurs racks
         const racksRes = await api.get(`/raks-by-user-direction/${currentUser.id}`);
         setRacksWithDirections(Array.isArray(racksRes.data) ? racksRes.data : []);
         
-        // Charger les données complètes des racks pour la visualisation
         const racksCompleteRes = await api.get(`/raks-complete-data/${currentUser.id}`);
         setRacksCompleteData(Array.isArray(racksCompleteRes.data) ? racksCompleteRes.data : []);
       } else {
@@ -71,7 +61,6 @@ function Dashboard() {
     } catch (err) {
       setError('Erreur lors du chargement des données');
       console.error('Erreur dashboard:', err);
-      // Initialiser avec des tableaux vides en cas d'erreur
       setRecentAlerts([]);
       setUsers([]);
       setRacksWithDirections([]);
@@ -85,19 +74,17 @@ function Dashboard() {
     loadDashboardData();
   }, []);
 
-  // Fonction pour actualiser les données
   const handleRefresh = async () => {
     await loadDashboardData();
   };
 
-  // Fonctions de gestion des racks
   const handleAddRack = () => {
     setShowAddRackModal(true);
   };
 
   const handleRackAdded = () => {
     setShowAddRackModal(false);
-    loadDashboardData(); // Recharger les données
+    loadDashboardData();
   };
 
   const handleDeleteRack = (rack) => {
@@ -108,10 +95,9 @@ function Dashboard() {
   const handleRackDeleted = () => {
     setShowDeleteRackModal(false);
     setSelectedRack(null);
-    loadDashboardData(); // Recharger les données
+    loadDashboardData(); 
   };
 
-  // Fonction pour supprimer un utilisateur
   const handleDeleteUser = async (userId) => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.')) {
       return;
@@ -120,7 +106,6 @@ function Dashboard() {
     try {
       setDeletingUserId(userId);
       await api.delete(`/utilisateurs/${userId}`);
-      // Recharger la liste des utilisateurs
       const usersRes = await api.get('/utilisateurs');
       setUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
       setSuccess('Utilisateur supprimé avec succès');

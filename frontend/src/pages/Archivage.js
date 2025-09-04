@@ -10,7 +10,6 @@ const Archivage = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  // Charger les statistiques
   const loadStats = async () => {
     try {
       setLoading(true);
@@ -25,7 +24,6 @@ const Archivage = () => {
     }
   };
 
-  // Effectuer l'archivage
   const handleArchiver = async () => {
     try {
       setArchiving(true);
@@ -36,7 +34,6 @@ const Archivage = () => {
       
       if (response.data.success) {
         setMessage(`Archivage réussi ! ${response.data.total} enregistrements archivés (${response.data.electrique} électrique, ${response.data.clime} climatisation)`);
-        // Recharger les statistiques
         await loadStats();
       } else {
         setError('Erreur lors de l\'archivage');
@@ -49,7 +46,6 @@ const Archivage = () => {
     }
   };
 
-  // Nettoyer les anciennes données
   const handleNettoyer = async () => {
     if (!window.confirm('Êtes-vous sûr de vouloir nettoyer les anciennes données archivées (plus d\'un an) ? Cette action est irréversible.')) {
       return;
@@ -64,7 +60,6 @@ const Archivage = () => {
       
       if (response.data.success) {
         setMessage(`Nettoyage réussi ! ${response.data.supprimes} anciens enregistrements supprimés`);
-        // Recharger les statistiques
         await loadStats();
       } else {
         setError('Erreur lors du nettoyage');

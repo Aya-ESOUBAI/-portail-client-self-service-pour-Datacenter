@@ -28,7 +28,6 @@ function getRacksWithDirections() {
 function getRacksByUserDirection($userId) {
     $pdo = getPDO();
     
-    // Récupérer les informations de l'utilisateur
     $stmt = $pdo->prepare('SELECT role, direction_id FROM utilisateur WHERE id = ?');
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
@@ -37,7 +36,6 @@ function getRacksByUserDirection($userId) {
         return [];
     }
     
-    // Si c'est un admin, retourner tous les racks
     if ($user['role'] === 'Admin') {
         $stmt = $pdo->query('
             SELECT r.*, d.nom as direction_nom, d.adresse as direction_adresse, d.email_contact, d.telephone
@@ -48,7 +46,6 @@ function getRacksByUserDirection($userId) {
         return $stmt->fetchAll();
     }
     
-    // Si c'est une direction, retourner seulement les racks de sa direction
     if ($user['role'] === 'Direction' && $user['direction_id']) {
         $stmt = $pdo->prepare('
             SELECT r.*, d.nom as direction_nom, d.adresse as direction_adresse, d.email_contact, d.telephone
@@ -71,7 +68,6 @@ function getRacksWithCompleteData($userId = null) {
     $params = [];
     
     if ($userId) {
-        // Récupérer les informations de l'utilisateur
         $stmt = $pdo->prepare('SELECT role, direction_id FROM utilisateur WHERE id = ?');
         $stmt->execute([$userId]);
         $user = $stmt->fetch();

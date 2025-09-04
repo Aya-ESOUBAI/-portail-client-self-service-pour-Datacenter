@@ -1,21 +1,15 @@
 <?php
 require_once 'config.php';
 
-/**
- * Système d'archivage automatique des données des capteurs
- * Transfère les données de plus d'un jour vers la table donneeenv
- */
 
 function archiverDonneesCapteurs() {
     $pdo = getPDO();
     
     try {
-        // Date limite : il y a 24 heures
         $dateLimite = date('Y-m-d H:i:s', strtotime('-24 hours'));
         
         echo "Archivage des données antérieures à : " . $dateLimite . "\n";
         
-        // 1. Archiver les données des capteurs électriques
         $sqlElectrique = "
             INSERT INTO donneeenv (
                 type, capteur_type, valeur, unite, date_heure, source_capteur_id, 
@@ -44,7 +38,6 @@ function archiverDonneesCapteurs() {
         $nbElectrique = $stmt->rowCount();
         echo "Données électriques archivées : " . $nbElectrique . " enregistrements\n";
         
-        // 2. Archiver les données des capteurs de climatisation
         $sqlClime = "
             INSERT INTO donneeenv (
                 type, capteur_type, valeur, unite, date_heure, source_capteur_id, 
@@ -72,7 +65,6 @@ function archiverDonneesCapteurs() {
         $nbClime = $stmt->rowCount();
         echo "Données climatisation archivées : " . $nbClime . " enregistrements\n";
         
-        // 3. Supprimer les données archivées des tables originales
         if ($nbElectrique > 0) {
             $sqlDeleteElectrique = "DELETE FROM capteurelectrique WHERE date_mesure < ?";
             $stmt = $pdo->prepare($sqlDeleteElectrique);
@@ -106,14 +98,11 @@ function archiverDonneesCapteurs() {
     }
 }
 
-/**
- * Fonction pour obtenir les statistiques d'archivage
- */
+
 function getStatistiquesArchivage() {
     $pdo = getPDO();
     
     try {
-        // Compter les données récentes (moins de 24h)
         $dateLimite = date('Y-m-d H:i:s', strtotime('-24 hours'));
         
         $sqlRecentes = "
@@ -134,7 +123,6 @@ function getStatistiquesArchivage() {
         $stmt->execute([$dateLimite, $dateLimite]);
         $donneesRecentes = $stmt->fetchAll();
         
-        // Compter les données archivées
         $sqlArchivees = "
             SELECT 
                 type,
@@ -160,10 +148,6 @@ function getStatistiquesArchivage() {
     }
 }
 
-/**
- * Fonction pour nettoyer les anciennes données archivées (optionnel)
- * Supprime les données de plus de X jours de la table donneeenv
- */
 function nettoyerAnciennesDonneesArchivees($jours = 365) {
     $pdo = getPDO();
     
@@ -191,11 +175,9 @@ function nettoyerAnciennesDonneesArchivees($jours = 365) {
     }
 }
 
-// Si le fichier est exécuté directement
 if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
     echo "=== Système d'Archivage des Capteurs ===\n\n";
     
-    // Afficher les statistiques avant archivage
     echo "Statistiques avant archivage :\n";
     $stats = getStatistiquesArchivage();
     if (isset($stats['error'])) {

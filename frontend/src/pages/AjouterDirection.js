@@ -38,7 +38,6 @@ const AjouterDirection = () => {
         mot_de_passe: response.data.mot_de_passe
       });
       
-      // Rediriger après 5 secondes pour laisser le temps de voir les informations
       setTimeout(() => {
         navigate('/dashboard');
       }, 5000);

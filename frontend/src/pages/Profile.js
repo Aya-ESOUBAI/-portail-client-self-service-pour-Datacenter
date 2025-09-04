@@ -40,7 +40,6 @@ function Profile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation des mots de passe
     if (formData.nouveau_mot_de_passe && formData.nouveau_mot_de_passe !== formData.confirmer_mot_de_passe) {
       setError('Les nouveaux mots de passe ne correspondent pas');
       return;
@@ -62,19 +61,16 @@ function Profile() {
         telephone: formData.telephone
       };
 
-      // Ajouter le mot de passe actuel si fourni
       if (formData.mot_de_passe) {
         updateData.mot_de_passe = formData.mot_de_passe;
       }
 
-      // Ajouter le nouveau mot de passe si fourni
       if (formData.nouveau_mot_de_passe) {
         updateData.nouveau_mot_de_passe = formData.nouveau_mot_de_passe;
       }
 
       await api.put(`/utilisateurs/${userInfo.id}`, updateData);
 
-      // Mettre à jour les informations dans localStorage
       const updatedUser = {
         ...userInfo,
         nom: formData.nom,
@@ -87,7 +83,6 @@ function Profile() {
       setSuccess('Profil mis à jour avec succès');
       setEditing(false);
       
-      // Réinitialiser les champs de mot de passe
       setFormData(prev => ({
         ...prev,
         mot_de_passe: '',
@@ -107,7 +102,6 @@ function Profile() {
     setEditing(false);
     setError('');
     setSuccess('');
-    // Restaurer les données originales
     setFormData({
       nom: userInfo?.nom || '',
       email: userInfo?.email || '',

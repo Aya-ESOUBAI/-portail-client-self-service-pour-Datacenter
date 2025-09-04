@@ -24,7 +24,6 @@ function getByRack($rackId) {
 function getConsumptionByUserDirection($userId) {
     $pdo = getPDO();
     
-    // Récupérer les informations de l'utilisateur
     $stmt = $pdo->prepare('SELECT role, direction_id FROM utilisateur WHERE id = ?');
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
@@ -33,7 +32,6 @@ function getConsumptionByUserDirection($userId) {
         return [];
     }
     
-    // Si c'est un admin, retourner toutes les données
     if ($user['role'] === 'Admin') {
         $stmt = $pdo->query('
             SELECT 
@@ -58,7 +56,6 @@ function getConsumptionByUserDirection($userId) {
         return $stmt->fetchAll();
     }
     
-    // Si c'est une direction, retourner seulement les données de sa direction
     if ($user['role'] === 'Direction' && $user['direction_id']) {
         $stmt = $pdo->prepare('
             SELECT 

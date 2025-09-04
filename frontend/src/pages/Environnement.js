@@ -9,7 +9,6 @@ function Environnement() {
   const [userInfo, setUserInfo] = useState(null);
 
   useEffect(() => {
-    // Récupérer les informations de l'utilisateur connecté
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     setUserInfo(currentUser);
 
@@ -17,7 +16,6 @@ function Environnement() {
       try {
         setLoading(true);
         
-        // Charger les données complètes des racks avec températures air entrant/sortant
         const response = await api.get(`/raks-complete-data/${currentUser.id || 1}`);
         setRacksData(Array.isArray(response.data) ? response.data : []);
         
@@ -33,7 +31,6 @@ function Environnement() {
     loadRacksData();
   }, []);
 
-  // Fonction pour obtenir la couleur selon la température
   const getTemperatureColor = (temperature) => {
     if (!temperature || temperature === 0) return 'text-gray-500';
     const value = parseFloat(temperature);
@@ -43,7 +40,6 @@ function Environnement() {
     return 'text-red-600';
   };
 
-  // Fonction pour formater la température
   const formatTemperature = (temperature) => {
     if (!temperature || temperature === 0) return 'N/A';
     return `${parseFloat(temperature).toFixed(1)} °C`;

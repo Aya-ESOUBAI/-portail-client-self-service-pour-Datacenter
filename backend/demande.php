@@ -7,7 +7,6 @@ function index() {
         
         $pdo = getPDO();
         
-        // Vérifier la connexion
         if (!$pdo) {
             $error = 'Erreur: Impossible de se connecter à la base de données';
             error_log($error);
@@ -37,7 +36,6 @@ function index() {
         error_log('Nombre de demandes récupérées: ' . count($result));
         
         if (empty($result)) {
-            // Vérifier si la table est vide
             $countStmt = $pdo->query('SELECT COUNT(*) as count FROM demande');
             $count = $countStmt->fetch(PDO::FETCH_ASSOC)['count'];
             error_log('La table demande contient ' . $count . ' enregistrements');
@@ -73,19 +71,15 @@ function getAlertThresholds() {
     return $stmt->fetchAll();
 }
 
-// Fonction pour vérifier les seuils critiques et envoyer des notifications
 function checkCriticalThresholds() {
     $pdo = getPDO();
     
-    // Récupérer tous les seuils critiques
     $thresholds = getAlertThresholds();
     
     foreach ($thresholds as $threshold) {
-        // Vérifier les données actuelles selon le type
         $currentValue = getCurrentValue($threshold['type']);
         
         if ($currentValue !== null && $currentValue > $threshold['valeur_seuil']) {
-            // Seuil critique dépassé - créer une alerte et envoyer des notifications
             $alertData = [
                 'type' => $threshold['type'],
                 'valeur_detectee' => $currentValue,
@@ -95,22 +89,18 @@ function checkCriticalThresholds() {
                 'statut' => 'active'
             ];
             
-            // Créer l'alerte
             store($alertData);
             
-            // Envoyer les notifications
             sendCriticalNotifications($threshold, $currentValue);
         }
     }
 }
 
-// Fonction pour obtenir la valeur actuelle selon le type
 function getCurrentValue($type) {
     $pdo = getPDO();
     
     switch ($type) {
         case 'temperature':
-            // Récupérer la température moyenne actuelle
             $stmt = $pdo->query('
                 SELECT AVG(cd.valeur) as moyenne 
                 FROM capteurdeclime cd 
@@ -121,7 +111,6 @@ function getCurrentValue($type) {
             return $result ? $result['moyenne'] : null;
             
         case 'energie':
-            // Récupérer la consommation énergétique moyenne actuelle
             $stmt = $pdo->query('
                 SELECT AVG(ce.valeur) as moyenne 
                 FROM capteurelectrique ce 
@@ -131,7 +120,6 @@ function getCurrentValue($type) {
             return $result ? $result['moyenne'] : null;
             
         case 'humidite':
-            // Récupérer l'humidité moyenne actuelle
             $stmt = $pdo->query('
                 SELECT AVG(cd.valeur) as moyenne 
                 FROM capteurdeclime cd 
@@ -146,15 +134,12 @@ function getCurrentValue($type) {
     }
 }
 
-// Fonction pour envoyer les notifications critiques
 function sendCriticalNotifications($threshold, $currentValue) {
     $pdo = getPDO();
     
-    // Récupérer tous les administrateurs
     $stmt = $pdo->query('SELECT * FROM utilisateur WHERE role = "Admin"');
     $admins = $stmt->fetchAll();
     
-    // Récupérer toutes les directions
     $stmt = $pdo->query('SELECT * FROM direction');
     $directions = $stmt->fetchAll();
     
@@ -166,7 +151,6 @@ function sendCriticalNotifications($threshold, $currentValue) {
     $message .= "Date: " . date('d/m/Y H:i:s') . "\n\n";
     $message .= "Action requise immédiatement!";
     
-    // Envoyer aux administrateurs
     foreach ($admins as $admin) {
         if (!empty($admin['email'])) {
             sendEmail($admin['email'], "Alerte Critique - {$threshold['type']}", $message);
@@ -176,7 +160,6 @@ function sendCriticalNotifications($threshold, $currentValue) {
         }
     }
     
-    // Envoyer aux directions
     foreach ($directions as $direction) {
         if (!empty($direction['email_contact'])) {
             sendEmail($direction['email_contact'], "Alerte Critique - {$threshold['type']}", $message);
@@ -187,36 +170,27 @@ function sendCriticalNotifications($threshold, $currentValue) {
     }
 }
 
-// Fonction pour envoyer un email
 function sendEmail($to, $subject, $message) {
-    // Configuration pour l'envoi d'email
     $headers = "From: datacenter@example.com\r\n";
     $headers .= "Reply-To: datacenter@example.com\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
     
-    // Envoi de l'email (dans un environnement de production, utilisez une bibliothèque comme PHPMailer)
     mail($to, $subject, $message, $headers);
     
-    // Log de l'envoi
     error_log("Email envoyé à {$to}: {$subject}");
 }
 
-// Fonction pour envoyer un SMS (simulation - dans un environnement réel, utilisez un service SMS)
 function sendSMS($phone, $message) {
-    // Simulation d'envoi SMS
-    // Dans un environnement réel, utilisez un service comme Twilio, Nexmo, etc.
     error_log("SMS envoyé à {$phone}: {$message}");
 }
 
 function store($data) {
     $pdo = getPDO();
 
-    // Si la requête est POST et multipart/form-data, lire depuis $_POST
     if (empty($data) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $data = $_POST;
     }
 
-    // Récupérer l'utilisateur connecté depuis le token ou le frontend
     $userId = null;
     $headers = function_exists('getallheaders') ? getallheaders() : [];
     $token = null;
@@ -226,16 +200,12 @@ function store($data) {
             $token = substr($authHeader, 7);
         }
     }
-    // Essayer de récupérer l'utilisateur depuis le frontend (FormData)
     if (isset($data['utilisateur_id']) && !empty($data['utilisateur_id'])) {
         $userId = $data['utilisateur_id'];
     } else if ($token) {
-        // Si vous avez un décodage JWT, utilisez-le ici
-        // $userId = decodeJWT($token);
-        $userId = null; // fallback si pas de décodage
+        $userId = null; 
     }
 
-    // Récupérer la direction de l'utilisateur
     $directionId = null;
     if ($userId) {
         $stmt = $pdo->prepare('SELECT direction_id FROM utilisateur WHERE id = ?');
@@ -244,7 +214,6 @@ function store($data) {
         $directionId = $user['direction_id'] ?? null;
     }
     
-    // Récupérer la direction de l'utilisateur
     $directionId = null;
     if ($userId) {
         $stmt = $pdo->prepare('SELECT direction_id FROM utilisateur WHERE id = ?');
@@ -253,29 +222,24 @@ function store($data) {
         $directionId = $user['direction_id'] ?? null;
     }
 
-    // Préparer les données pour l'insertion
     $pdfFilename = null;
 
-    // Vérification du type de demande
     $validTypes = ['INSTALLATION', 'RETRAIT', 'ACCES'];
     if (!in_array($data['type'], $validTypes)) {
         http_response_code(400);
         return ['error' => 'Type de demande invalide. Les types valides sont : ' . implode(', ', $validTypes)];
     }
     
-    // Vérification de l'utilisateur
     if (!$userId) {
         http_response_code(400);
         return ['error' => 'Utilisateur non identifié. Veuillez vous connecter.'];
     }
     
-    // Vérification de la direction
     if (!$directionId) {
         http_response_code(400);
         return ['error' => 'Direction non trouvée pour cet utilisateur.'];
     }
     
-    // Insérer la demande sans PDF
     try {
         error_log('Début de la création de la demande');
         error_log('Données reçues: ' . print_r($data, true));
@@ -329,12 +293,10 @@ function store($data) {
         return ['error' => 'Erreur de base de données lors de la création de la demande'];
     }
 
-    // Récupérer les informations de l'utilisateur et de la direction pour le PDF
     $stmt = $pdo->prepare('SELECT u.nom, u.email, d.nom as direction_nom FROM utilisateur u LEFT JOIN direction d ON u.direction_id = d.id WHERE u.id = ?');
     $stmt->execute([$userId]);
     $userInfo = $stmt->fetch();
 
-    // Préparer les données pour le PDF
     $pdfData = array_merge($data, [
         'direction_id' => $directionId,
         'direction_nom' => $userInfo['direction_nom'] ?? 'Inconnue',
@@ -346,7 +308,6 @@ function store($data) {
     
     $generatedPdfFilename = generatePDFForDemande($demandeId, $pdfData);
 
-    // Mettre à jour la demande avec le nom du PDF généré
     if ($generatedPdfFilename) {
         $stmt = $pdo->prepare('UPDATE demande SET justificatif_pdf = ? WHERE id = ?');
         $stmt->execute([$generatedPdfFilename, $demandeId]);
@@ -359,7 +320,6 @@ function store($data) {
     ];
 }
 
-// Fonction pour générer un PDF pour une demande
 function generatePDFForDemande($demandeId, $data) {
     require_once __DIR__ . '/../vendor/autoload.php';
     $uploadDir = __DIR__ . '/uploads/justificatifs/';
@@ -371,7 +331,6 @@ function generatePDFForDemande($demandeId, $data) {
 
     $content = generatePDFContent($demandeId, $data);
 
-    // Générer le PDF avec FPDF et encodage correct
     $pdf = new \FPDF();
     $pdf->AddPage();
     $pdf->SetFont('Arial', 'B', 16);
@@ -386,7 +345,6 @@ function generatePDFForDemande($demandeId, $data) {
     $pdf->Cell(0, 8, utf8_decode('--- Document généré automatiquement ---'), 0, 1);
     $pdf->Cell(0, 8, utf8_decode('Date de génération: ' . date('d/m/Y H:i:s')), 0, 1);
 
-    // Sauvegarder le PDF
     $pdf->Output('F', $filepath);
     if (file_exists($filepath)) {
         return $filename;
@@ -394,7 +352,6 @@ function generatePDFForDemande($demandeId, $data) {
     return null;
 }
 
-// Fonction pour générer le contenu du PDF
 function generatePDFContent($demandeId, $data) {
     $direction = getDirectionName($data['direction_id']);
     $date = date('d/m/Y');
@@ -406,7 +363,6 @@ function generatePDFContent($demandeId, $data) {
     $content .= "Date de soumission: {$date}\n";
     $content .= "Statut: " . getStatusText($data['statut'] ?? 'EN_ATTENTE') . "\n\n";
     
-    // Contenu spécifique selon le type avec les informations saisies
     switch ($data['type']) {
         case 'INSTALLATION':
             $content .= "DÉTAILS DE L'INSTALLATION:\n\n";
@@ -535,7 +491,6 @@ function storeThreshold($data) {
         $data['description']
     ]);
     
-    // Vérifier immédiatement si le seuil est dépassé
     checkCriticalThresholds();
     
     return ['message' => 'Seuil critique créé et vérifié'];
@@ -544,7 +499,6 @@ function storeThreshold($data) {
 function update($id, $data) {
     $pdo = getPDO();
     
-    // Validation pour les demandes d'accès
     if (isset($data['type']) && $data['type'] === 'ACCES') {
         if (empty($data['nom']) || empty($data['prenom']) || empty($data['cin']) || empty($data['date_acces'])) {
             http_response_code(400);
@@ -552,7 +506,6 @@ function update($id, $data) {
         }
     }
     
-    // Validation pour les demandes d'installation et retrait
     if (isset($data['type']) && ($data['type'] === 'INSTALLATION' || $data['type'] === 'RETRAIT')) {
         if (empty($data['nom_equipement']) || empty($data['serial_number'])) {
             http_response_code(400);
@@ -586,7 +539,6 @@ function updateThreshold($id, $data) {
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     
-    // Vérifier immédiatement si le seuil est dépassé
     checkCriticalThresholds();
     
     return ['message' => 'Seuil critique mis à jour et vérifié'];
@@ -606,7 +558,6 @@ function destroyThreshold($id) {
     return ['message' => 'Seuil critique supprimé'];
 }
 
-// Fonction pour valider une demande
 function valider($id) {
     $pdo = getPDO();
     $stmt = $pdo->prepare('UPDATE demande SET statut = "VALIDEE" WHERE id = ?');
@@ -614,7 +565,6 @@ function valider($id) {
     return ['message' => 'Demande validée avec succès'];
 }
 
-// Fonction pour rejeter une demande
 function rejeter($id) {
     $pdo = getPDO();
     $stmt = $pdo->prepare('UPDATE demande SET statut = "REJETEE" WHERE id = ?');
@@ -622,7 +572,6 @@ function rejeter($id) {
     return ['message' => 'Demande rejetée'];
 }
 
-// Fonction pour marquer une demande comme terminée
 function terminer($id) {
     $pdo = getPDO();
     $stmt = $pdo->prepare('UPDATE demande SET statut = "TERMINEE" WHERE id = ?');
@@ -630,7 +579,6 @@ function terminer($id) {
     return ['message' => 'Demande marquée comme terminée'];
 }
 
-// Fonction pour obtenir les statistiques des demandes
 function getStats() {
     $pdo = getPDO();
     $stmt = $pdo->query('
@@ -643,11 +591,9 @@ function getStats() {
     return $stmt->fetchAll();
 }
 
-// Fonction pour obtenir les demandes par direction
 function getDemandesByDirection() {
     $pdo = getPDO();
     
-    // Récupérer les paramètres de filtrage
     $startDate = $_GET['start_date'] ?? null;
     $endDate = $_GET['end_date'] ?? null;
     $type = $_GET['type'] ?? null;
@@ -655,13 +601,11 @@ function getDemandesByDirection() {
     $whereConditions = [];
     $params = [];
     
-    // Filtre par type de demande
     if ($type) {
         $whereConditions[] = 'd.type = ?';
         $params[] = $type;
     }
     
-    // Filtre par date
     if ($startDate && $endDate) {
         $whereConditions[] = 'd.date_soumission BETWEEN ? AND ?';
         $params[] = $startDate . ' 00:00:00';
@@ -693,11 +637,9 @@ function getDemandesByDirection() {
     return $stmt->fetchAll();
 }
 
-// Fonction pour télécharger le PDF d'une demande
 function downloadPDF($id) {
     $pdo = getPDO();
     
-    // Récupérer la demande
     $stmt = $pdo->prepare('SELECT * FROM demande WHERE id = ?');
     $stmt->execute([$id]);
     $demande = $stmt->fetch();
@@ -707,7 +649,6 @@ function downloadPDF($id) {
         return ['error' => 'Demande non trouvée'];
     }
     
-    // Vérifier si le PDF existe
     if (empty($demande['justificatif_pdf'])) {
         http_response_code(404);
         return ['error' => 'PDF non trouvé pour cette demande'];
@@ -721,14 +662,12 @@ function downloadPDF($id) {
         return ['error' => 'Fichier PDF non trouvé sur le serveur'];
     }
     
-    // Définir les headers pour le téléchargement
     header('Content-Type: application/pdf');
     header('Content-Disposition: attachment; filename="' . $demande['justificatif_pdf'] . '"');
     header('Content-Length: ' . filesize($filepath));
     header('Cache-Control: no-cache, must-revalidate');
     header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
     
-    // Lire et envoyer le fichier
     readfile($filepath);
     exit;
 }

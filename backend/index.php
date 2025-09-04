@@ -7,13 +7,11 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-W
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Max-Age: 86400');
 
-// Répondre immédiatement aux requêtes OPTIONS (prévol)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
-// Désactiver l'affichage des erreurs en production
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/error.log');
@@ -24,13 +22,13 @@ require_once 'routes.php';
 $routes = include 'routes.php';
 $method = $_SERVER['REQUEST_METHOD'];
 $uri = strtok($_SERVER['REQUEST_URI'], '?');
-// Nettoyer l'URI pour le serveur de développement
+
 $uri = str_replace('/3/backend/index.php', '', $uri);
 $uri = str_replace('/index.php', '', $uri);
 
 error_log('URI: ' . $uri);
 error_log('Method: ' . $method);
-// Fonction pour extraire les paramètres d'URL
+
 function matchRoute($routes, $method, $uri) {
     foreach ($routes as $route) {
         list($routeMethod, $routePath, $handler) = $route;
@@ -52,7 +50,6 @@ if (!$handler) {
     exit;
 }
 
-// Authentification basique par token (sauf /login et /register)
 $publicRoutes = [
     'auth.php@login',
     'auth.php@register'
@@ -65,7 +62,6 @@ if (!in_array($handler, $publicRoutes)) {
         echo json_encode(['error' => 'Token manquant ou invalide']);
         exit;
     }
-    // Ici, on accepte n'importe quel token non vide (à remplacer par une vraie vérification JWT en prod)
     $token = $matches[1];
     if (empty($token)) {
         http_response_code(401);

@@ -10,7 +10,6 @@ function Alertes() {
   const [isChecking, setIsChecking] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
 
-  // États pour les formulaires
   const [newThreshold, setNewThreshold] = useState({
     type: '',
     valeur_seuil: '',
@@ -19,7 +18,6 @@ function Alertes() {
   });
 
   useEffect(() => {
-    // Récupérer les informations de l'utilisateur connecté
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     setUserInfo(currentUser);
     
@@ -33,13 +31,11 @@ function Alertes() {
         api.get('/alert-thresholds')
       ]);
       
-      // Vérifier que les données sont des tableaux
       setAlertes(Array.isArray(alertesRes.data) ? alertesRes.data : []);
       setThresholds(Array.isArray(thresholdsRes.data) ? thresholdsRes.data : []);
     } catch (err) {
       setError('Erreur lors du chargement des données d\'alertes');
       console.error('Erreur alertes:', err);
-      // Initialiser avec des tableaux vides en cas d'erreur
       setAlertes([]);
       setThresholds([]);
     }
@@ -74,7 +70,7 @@ function Alertes() {
     try {
       await api.post('/check-thresholds');
       setSuccess('Vérification des seuils critiques effectuée. Notifications envoyées si nécessaire.');
-      loadAlertesData(); // Recharger les alertes pour voir les nouvelles
+      loadAlertesData(); 
     } catch (err) {
       setError('Erreur lors de la vérification des seuils critiques');
     } finally {
@@ -82,7 +78,6 @@ function Alertes() {
     }
   };
 
-  // Fonction utilitaire pour obtenir la date formatée
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString('fr-FR', {
       day: '2-digit',
@@ -109,12 +104,10 @@ function Alertes() {
   const formatAlertMessage = (alert) => {
     let message = [];
     
-    // Ajouter le message principal s'il existe
     if (alert.message) {
       message.push(alert.message);
     }
     
-    // Ajouter les détails de la valeur détectée et du seuil si disponibles
     if (alert.valeur_detectee !== undefined) {
       message.push(`Valeur détectée: ${alert.valeur_detectee}`);
     }
@@ -123,12 +116,10 @@ function Alertes() {
       message.push(`Seuil critique: ${alert.seuil_critique}`);
     }
     
-    // Si l'alerte est liée à un rack
     if (alert.rack_nom) {
       message.push(`Rack: ${alert.rack_nom}`);
     }
     
-    // Si aucun message n'a été construit, utiliser une valeur par défaut
     if (message.length === 0) {
       message.push('Aucun détail disponible');
     }

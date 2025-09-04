@@ -39,9 +39,9 @@ const RackVisualization = ({ racksData, loading, error }) => {
     if (!value) return '#ccc';
     const numValue = parseFloat(value);
     if (unit === 'A') {
-      if (numValue > 15) return '#ff4444'; // Rouge pour intensité élevée
-      if (numValue > 10) return '#ffaa00'; // Orange pour intensité moyenne
-      return '#44ff44'; // Vert pour intensité normale
+      if (numValue > 15) return '#ff4444'; 
+      if (numValue > 10) return '#ffaa00'; 
+      return '#44ff44'; 
     }
     return '#666';
   };
@@ -50,9 +50,9 @@ const RackVisualization = ({ racksData, loading, error }) => {
     if (!value) return '#ccc';
     const numValue = parseFloat(value);
     if (unit === '°C') {
-      if (numValue > 30) return '#ff4444'; // Rouge pour température élevée
-      if (numValue > 25) return '#ffaa00'; // Orange pour température moyenne
-      return '#44ff44'; // Vert pour température normale
+      if (numValue > 30) return '#ff4444'; 
+      if (numValue > 25) return '#ffaa00'; 
+      return '#44ff44'; 
     }
     return '#666';
   };

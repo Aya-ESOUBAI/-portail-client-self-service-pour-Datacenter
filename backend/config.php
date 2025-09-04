@@ -1,10 +1,9 @@
 <?php
-// Configuration de la connexion à la base de données MySQL
 
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'stage'); // Nom de la base de données mis à jour
-define('DB_USER', 'root'); // À adapter
-define('DB_PASS', ''); // À adapter
+define('DB_NAME', 'stage'); 
+define('DB_USER', 'root'); 
+define('DB_PASS', ''); 
 
 function getPDO() {
     try {

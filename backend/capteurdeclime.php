@@ -42,7 +42,6 @@ function getTemperatureByUserDirection($userId) {
         return [];
     }
     
-    // Si c'est un admin, retourner toutes les données
     if ($user['role'] === 'Admin') {
         $stmt = $pdo->query('
             SELECT 
@@ -65,7 +64,6 @@ function getTemperatureByUserDirection($userId) {
         return $stmt->fetchAll();
     }
     
-    // Si c'est une direction, retourner seulement les données de sa direction
     if ($user['role'] === 'Direction' && $user['direction_id']) {
         $stmt = $pdo->prepare('
             SELECT 
@@ -96,7 +94,6 @@ function getTemperatureByUserDirection($userId) {
 function getTemperatureStatsByRack() {
     $pdo = getPDO();
     
-    // Récupérer les paramètres de filtrage
     $startDate = $_GET['start_date'] ?? null;
     $endDate = $_GET['end_date'] ?? null;
     $rackId = $_GET['rack_id'] ?? null;
@@ -104,13 +101,11 @@ function getTemperatureStatsByRack() {
     $whereConditions = [];
     $params = [];
     
-    // Filtre par rack
     if ($rackId) {
         $whereConditions[] = 'r.id = ?';
         $params[] = $rackId;
     }
     
-    // Filtre par date
     if ($startDate && $endDate) {
         $whereConditions[] = 'c.date_mesure BETWEEN ? AND ?';
         $params[] = $startDate . ' 00:00:00';

@@ -21,19 +21,15 @@ function RackDetailsModal({ isOpen, onClose, rack }) {
     setError('');
 
     try {
-      // Charger les PDU du rack
       const pdusRes = await api.get(`/pdus-by-rack/${rack.id}`);
       setPdus(Array.isArray(pdusRes.data) ? pdusRes.data : []);
 
-      // Charger les armoires de climatisation
       const armoiresRes = await api.get(`/armoiresdeclime-by-rack/${rack.id}`);
       setArmoires(Array.isArray(armoiresRes.data) ? armoiresRes.data : []);
 
-      // Charger les capteurs électriques
       const capteursElecRes = await api.get(`/capteurelectriques-by-rack/${rack.id}`);
       setCapteursElectriques(Array.isArray(capteursElecRes.data) ? capteursElecRes.data : []);
 
-      // Charger les capteurs de température
       const capteursTempRes = await api.get(`/capteurdeclimes-by-rack/${rack.id}`);
       setCapteursTemperature(Array.isArray(capteursTempRes.data) ? capteursTempRes.data : []);
 

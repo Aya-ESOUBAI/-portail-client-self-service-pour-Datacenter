@@ -8,7 +8,6 @@ echo "=====================================\n\n";
 try {
     $pdo = getPDO();
     
-    // Seuils critiques par défaut
     $defaultThresholds = [
         [
             'type' => 'temperature',
@@ -34,14 +33,12 @@ try {
     
     foreach ($defaultThresholds as $threshold) {
         try {
-            // Vérifier si le seuil existe déjà
             $stmt = $pdo->prepare("SELECT id FROM seuil_alerte WHERE type = ?");
             $stmt->execute([$threshold['type']]);
             
             if ($stmt->fetch()) {
                 echo "ℹ️ Seuil {$threshold['type']} existe déjà\n";
             } else {
-                // Ajouter le seuil
                 $stmt = $pdo->prepare("
                     INSERT INTO seuil_alerte (type, valeur_seuil, unite, description)
                     VALUES (?, ?, ?, ?)

@@ -7,14 +7,12 @@ function AddRackModal({ isOpen, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // Données du rack
   const [rackData, setRackData] = useState({
     nom: '',
     localisation: '',
     client_id: ''
   });
   
-  // Données des PDU
   const [pdus, setPdus] = useState([
     {
       marque: '',
@@ -24,7 +22,6 @@ function AddRackModal({ isOpen, onClose, onSuccess }) {
     }
   ]);
   
-  // Données des armoires de climatisation
   const [armoires, setArmoires] = useState([
     {
       marque: '',
@@ -102,11 +99,9 @@ function AddRackModal({ isOpen, onClose, onSuccess }) {
         throw new Error('Veuillez remplir tous les champs obligatoires du rack');
       }
 
-      // Créer le rack
       const rackResponse = await api.post('/raks', rackData);
       const rackId = rackResponse.data.id;
 
-      // Créer les PDU
       for (const pdu of pdus) {
         if (pdu.marque && pdu.modele) {
           await api.post('/pdus', {
@@ -116,7 +111,6 @@ function AddRackModal({ isOpen, onClose, onSuccess }) {
         }
       }
 
-      // Créer les armoires de climatisation
       for (const armoire of armoires) {
         if (armoire.marque && armoire.modele) {
           await api.post('/armoiresdeclime', {

@@ -2,11 +2,9 @@
 require_once 'config.php';
 require_once 'config_notifications.php';
 
-// Fonction pour vérifier les seuils critiques de tous les capteurs
 function checkAllSensorThresholds() {
     $pdo = getPDO();
     
-    // Récupérer tous les seuils critiques
     $stmt = $pdo->query('SELECT * FROM seuil_alerte ORDER BY type, valeur_seuil');
     $thresholds = $stmt->fetchAll();
     
@@ -15,29 +13,24 @@ function checkAllSensorThresholds() {
     }
 }
 
-// Fonction pour vérifier un seuil spécifique
 function checkSensorThreshold($threshold) {
     $pdo = getPDO();
     
-    // Récupérer les valeurs actuelles des capteurs selon le type
     $currentValues = getCurrentSensorValues($threshold['type']);
     
     foreach ($currentValues as $sensorData) {
         if ($sensorData['valeur'] > $threshold['valeur_seuil']) {
-            // Seuil critique dépassé - créer une alerte et envoyer des notifications
             createCriticalAlert($threshold, $sensorData);
         }
     }
 }
 
-// Fonction pour récupérer les valeurs actuelles des capteurs selon le type
 function getCurrentSensorValues($type) {
     $pdo = getPDO();
     $values = [];
     
     switch ($type) {
         case 'temperature':
-            // Récupérer les valeurs des capteurs de température
             $stmt = $pdo->query("
                 SELECT 
                     ce.id,
@@ -59,7 +52,6 @@ function getCurrentSensorValues($type) {
             break;
             
         case 'humidite':
-            // Récupérer les valeurs des capteurs d'humidité
             $stmt = $pdo->query("
                 SELECT 
                     ce.id,
@@ -81,7 +73,6 @@ function getCurrentSensorValues($type) {
             break;
             
         case 'energie':
-            // Récupérer les valeurs des capteurs électriques
             $stmt = $pdo->query("
                 SELECT 
                     ce.id,
@@ -108,11 +99,9 @@ function getCurrentSensorValues($type) {
     return $stmt->fetchAll();
 }
 
-// Fonction pour créer une alerte critique et envoyer les notifications
 function createCriticalAlert($threshold, $sensorData) {
     $pdo = getPDO();
     
-    // Vérifier si une alerte similaire a déjà été envoyée récemment (éviter le spam)
     $stmt = $pdo->prepare("
         SELECT id FROM alerte 
         WHERE type = ? 
@@ -122,11 +111,9 @@ function createCriticalAlert($threshold, $sensorData) {
     $stmt->execute([$threshold['type'], $sensorData['rack_nom']]);
     
     if ($stmt->fetch()) {
-        // Une alerte similaire a déjà été envoyée récemment
         return;
     }
     
-    // Créer l'alerte
     $alertData = [
         'type' => $threshold['type'],
         'message' => "Seuil critique dépassé: {$sensorData['valeur']} {$sensorData['unite']} (seuil: {$threshold['valeur_seuil']} {$threshold['unite']})",
@@ -147,23 +134,18 @@ function createCriticalAlert($threshold, $sensorData) {
     
     $alertId = $pdo->lastInsertId();
     
-    // Envoyer les notifications
     sendCriticalNotifications($alertId, $threshold, $sensorData);
 }
 
-// Fonction pour envoyer les notifications critiques
 function sendCriticalNotifications($alertId, $threshold, $sensorData) {
     $pdo = getPDO();
     
-    // Récupérer les informations de contact de l'admin
     $stmt = $pdo->query("SELECT email, telephone FROM utilisateur WHERE role = 'Admin' LIMIT 1");
     $admin = $stmt->fetch();
     
-    // Informations de la direction
     $directionEmail = $sensorData['email_contact'];
     $directionPhone = $sensorData['telephone'];
     
-    // Formater les messages
     $alertMessage = formatAlertMessage(
         $threshold['type'],
         $sensorData['valeur'] . ' ' . $sensorData['unite'],
@@ -182,10 +164,8 @@ function sendCriticalNotifications($alertId, $threshold, $sensorData) {
     
     $subject = "🚨 ALERTE CRITIQUE - {$threshold['type']} - {$sensorData['rack_nom']}";
     
-    // Envoyer les notifications
     $notifications = [];
     
-    // Email à la direction
     if ($directionEmail) {
         $emailSent = sendEmailViaMailgun($directionEmail, $subject, $alertEmail);
         $notifications[] = [
@@ -197,7 +177,6 @@ function sendCriticalNotifications($alertId, $threshold, $sensorData) {
         ];
     }
     
-    // SMS à la direction
     if ($directionPhone) {
         $smsSent = sendSMSViaTwilio($directionPhone, $alertMessage);
         $notifications[] = [
@@ -209,7 +188,6 @@ function sendCriticalNotifications($alertId, $threshold, $sensorData) {
         ];
     }
     
-    // Email à l'admin
     if ($admin && $admin['email']) {
         $emailSent = sendEmailViaMailgun($admin['email'], $subject, $alertEmail);
         $notifications[] = [
@@ -221,7 +199,6 @@ function sendCriticalNotifications($alertId, $threshold, $sensorData) {
         ];
     }
     
-    // SMS à l'admin
     if ($admin && $admin['telephone']) {
         $smsSent = sendSMSViaTwilio($admin['telephone'], $alertMessage);
         $notifications[] = [
@@ -233,7 +210,6 @@ function sendCriticalNotifications($alertId, $threshold, $sensorData) {
         ];
     }
     
-    // Enregistrer les notifications dans la base de données
     foreach ($notifications as $notification) {
         $stmt = $pdo->prepare("
             INSERT INTO notification_envoyee (alerte_id, type_notification, destinataire, message, statut)
@@ -249,7 +225,6 @@ function sendCriticalNotifications($alertId, $threshold, $sensorData) {
     }
 }
 
-// Fonction pour récupérer l'ID d'un rack par son nom
 function getRackIdByName($rackName) {
     $pdo = getPDO();
     $stmt = $pdo->prepare("SELECT id FROM rak WHERE nom = ?");
@@ -258,7 +233,6 @@ function getRackIdByName($rackName) {
     return $result ? $result['id'] : null;
 }
 
-// Fonction pour ajouter un seuil critique
 function addCriticalThreshold($type, $value, $unit, $description) {
     $pdo = getPDO();
     
@@ -268,7 +242,6 @@ function addCriticalThreshold($type, $value, $unit, $description) {
     ");
     $stmt->execute([$type, $value, $unit, $description]);
     
-    // Vérifier immédiatement si le seuil est dépassé
     checkSensorThreshold([
         'type' => $type,
         'valeur_seuil' => $value,
@@ -278,7 +251,6 @@ function addCriticalThreshold($type, $value, $unit, $description) {
     return ['message' => 'Seuil critique ajouté et vérification automatique activée'];
 }
 
-// Fonction pour récupérer l'historique des notifications
 function getNotificationHistory($limit = 50) {
     $pdo = getPDO();
     $stmt = $pdo->prepare("
@@ -295,7 +267,6 @@ function getNotificationHistory($limit = 50) {
     return $stmt->fetchAll();
 }
 
-// Fonction pour tester les services de notification
 function testNotificationServices() {
     $testEmail = 'test@example.com';
     $testPhone = '+1234567890';
@@ -303,11 +274,9 @@ function testNotificationServices() {
     
     $results = [];
     
-    // Test email
     $emailResult = sendEmailViaMailgun($testEmail, 'Test Email', $testMessage);
     $results['email'] = $emailResult ? 'Succès' : 'Échec';
     
-    // Test SMS
     $smsResult = sendSMSViaTwilio($testPhone, $testMessage);
     $results['sms'] = $smsResult ? 'Succès' : 'Échec';
     

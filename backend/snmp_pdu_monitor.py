@@ -62,20 +62,16 @@ def load_config():
         'weekend': 'false'
     }
     
-    # Charger la configuration depuis le fichier s'il existe
     if os.path.exists(config_file):
         config.read(config_file)
     else:
-        # Créer le fichier de configuration avec les valeurs par défaut
         with open(config_file, 'w') as f:
             config.write(f)
     
     return config
 
-# Charger la configuration globale
 config = load_config()
 
-# Configuration du logger
 def setup_logging():
     """Configure la journalisation"""
     log_level = getattr(logging, config['logging'].get('level', 'INFO'))
@@ -84,19 +80,16 @@ def setup_logging():
     max_size = int(config['logging'].get('max_size_mb', '10')) * 1024 * 1024  # Convertir en octets
     backup_count = int(config['logging'].get('backup_count', '5'))
     
-    # Créer le répertoire de logs s'il n'existe pas
     log_dir = os.path.dirname(log_file)
     if log_dir and not os.path.exists(log_dir):
         os.makedirs(log_dir)
     
-    # Configurer le gestionnaire de fichiers rotatifs
     file_handler = RotatingFileHandler(
         log_file, 
         maxBytes=max_size, 
         backupCount=backup_count
     )
     
-    # Formateur de log
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
@@ -104,18 +97,14 @@ def setup_logging():
     
     file_handler.setFormatter(formatter)
     
-    # Configurer le logger racine
     logger = logging.getLogger()
     logger.setLevel(log_level)
     
-    # Supprimer les gestionnaires existants
     for handler in logger.handlers[:]:
         logger.removeHandler(handler)
     
-    # Ajouter le gestionnaire de fichier
     logger.addHandler(file_handler)
     
-    # Ajouter également la sortie console pour le mode interactif
     if sys.stdout.isatty():
         console_handler = logging.StreamHandler()
         console_handler.setFormatter(formatter)
@@ -123,10 +112,8 @@ def setup_logging():
     
     return logger
 
-# Initialiser le logger
 logger = setup_logger()
 
-# Configuration de la base de données
 db_config = {
     'host': config['database'].get('host', 'localhost'),
     'database': config['database'].get('database', 'stage'),
@@ -134,7 +121,6 @@ db_config = {
     'password': config['database'].get('password', '')
 }
 
-# Configuration SNMP
 SNMP_TIMEOUT = int(config['snmp'].get('timeout', 5))
 SNMP_RETRIES = int(config['snmp'].get('retries', 1))
 SNMP_PORT = int(config['snmp'].get('port', 161))
@@ -151,7 +137,6 @@ def get_pdus_from_database():
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
         
-        # Récupérer les PDU avec leur configuration
         query = """
         SELECT p.id, p.ip_address as ip, p.snmp_community as community, 
                p.nombre_prises as outlet_count, p.marque, p.modele
@@ -162,7 +147,6 @@ def get_pdus_from_database():
         cursor.execute(query)
         pdus = cursor.fetchall()
         
-        # Ajouter les valeurs par défaut si nécessaire
         for pdu in pdus:
             pdu['community'] = pdu.get('community', 'public')
             pdu['outlet_count'] = pdu.get('outlet_count', 0)
@@ -177,20 +161,16 @@ def get_pdus_from_database():
             cursor.close()
             conn.close()
 
-# OID SNMP pour les PDU APC
-# Documentation des OID: https://www.oidview.com/mibs/318/APC-POWERNET-MIB.html
 APC_OIDS = {
-    # Mesures globales
-    'system_name': '1.3.6.1.4.1.318.1.1.1.1.2.0',      # Nom du système
-    'system_location': '1.3.6.1.4.1.318.1.1.1.2.2.0',  # Emplacement
-    'current': '1.3.6.1.4.1.318.1.1.12.2.2.1.1.2.1',   # Courant en Ampères
-    'voltage': '1.3.6.1.4.1.318.1.1.12.2.3.1.1.2.1',   # Tension en Volts
-    'active_power': '1.3.6.1.4.1.318.1.1.12.2.3.1.1.2.1',  # Puissance active en Watts
+    'system_name': '1.3.6.1.4.1.318.1.1.1.1.2.0',     
+    'system_location': '1.3.6.1.4.1.318.1.1.1.2.2.0', 
+    'current': '1.3.6.1.4.1.318.1.1.12.2.2.1.1.2.1',   
+    'voltage': '1.3.6.1.4.1.318.1.1.12.2.3.1.1.2.1',  
+    'active_power': '1.3.6.1.4.1.318.1.1.12.2.3.1.1.2.1',  
     
-    # Mesures par prise
-    'outlet_current': '1.3.6.1.4.1.318.1.1.12.3.5.1.1.2.{0}',  # Courant par prise
-    'outlet_status': '1.3.6.1.4.1.318.1.1.12.3.5.1.1.4.{0}',   # État de la prise (1=ON, 2=OFF)
-    'outlet_name': '1.3.6.1.4.1.318.1.1.12.3.5.1.1.2.{0}'      # Nom de la prise
+    'outlet_current': '1.3.6.1.4.1.318.1.1.12.3.5.1.1.2.{0}',  
+    'outlet_status': '1.3.6.1.4.1.318.1.1.12.3.5.1.1.4.{0}',   
+    'outlet_name': '1.3.6.1.4.1.318.1.1.12.3.5.1.1.2.{0}'     
 }
 
 def get_snmp_data(ip, oid, community=None, port=None):
@@ -254,14 +234,12 @@ def get_pdu_metrics(ip, community=None, outlet_count=0):
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     logger.info(f"Récupération des métriques pour la PDU {ip}")
     
-    # Récupération des métriques globales
     logger.debug(f"Récupération des métriques globales pour {ip}")
     system_name = get_snmp_data(ip, APC_OIDS['system_name'], community) or 'Inconnu'
     current = get_snmp_data(ip, APC_OIDS['current'], community)
     voltage = get_snmp_data(ip, APC_OIDS['voltage'], community)
     active_power = get_snmp_data(ip, APC_OIDS['active_power'], community)
     
-    # Préparation du résultat
     result = {
         'timestamp': timestamp,
         'ip': ip,
@@ -274,7 +252,6 @@ def get_pdu_metrics(ip, community=None, outlet_count=0):
     
     logger.debug(f"Métriques globales pour {ip}: {result}")
     
-    # Récupération des métriques par prise si nécessaire
     if outlet_count > 0:
         logger.debug(f"Récupération des données pour {outlet_count} prises")
         
@@ -313,7 +290,7 @@ def safe_int(value, default=None):
     if value is None:
         return default
     try:
-        return int(float(value))  # Convertit d'abord en float pour gérer les chaînes comme '1.0'
+        return int(float(value))  
     except (ValueError, TypeError):
         return default
 
@@ -341,35 +318,31 @@ def save_to_database(pdu_id, metrics):
         VALUES (%s, %s, %s, %s, %s)
         """
         
-        # Préparer les données pour le batch insert
         batch_data = []
         
-        # Enregistrer les mesures globales
-        # Courant (A) - prise_id = 0
         if metrics.get('current') is not None:
             batch_data.append((
                 pdu_id,
-                0,  # 0 pour les mesures globales
+                0,  
                 metrics['current'],
                 'A',
                 metrics['timestamp']
             ))
         
-        # Tension (V) - prise_id = -1
+        
         if metrics.get('voltage') is not None:
             batch_data.append((
                 pdu_id,
-                -1,  # -1 pour la tension
+                -1,  
                 metrics['voltage'],
                 'V',
                 metrics['timestamp']
             ))
         
-        # Puissance active (W) - prise_id = -2
         if metrics.get('active_power') is not None:
             batch_data.append((
                 pdu_id,
-                -2,  # -2 pour la puissance active
+                -2,  
                 metrics['active_power'],
                 'W',
                 metrics['timestamp']
@@ -380,23 +353,23 @@ def save_to_database(pdu_id, metrics):
             if outlet.get('current') is not None:
                 batch_data.append((
                     pdu_id,
-                    outlet['number'],  # Numéro de la prise (1 à N)
+                    outlet['number'],  
                     outlet['current'],
                     'A',
                     metrics['timestamp']
                 ))
             
-            # Enregistrer l'état de la prise (0=OFF, 1=ON)
+            
             if outlet.get('status') is not None:
                 batch_data.append((
                     pdu_id,
-                    outlet['number'] * 1000,  # Pour les états, on utilise prise_id * 1000
+                    outlet['number'] * 1000, 
                     outlet['status'],
                     'STATUS',
                     metrics['timestamp']
                 ))
         
-        # Exécuter l'insertion par lots
+        
         if batch_data:
             cursor.executemany(query, batch_data)
             conn.commit()
@@ -441,21 +414,17 @@ def should_run_now():
     try:
         now = datetime.now()
         
-        # Vérifier si on est en semaine ou week-end
-        is_weekend = now.weekday() >= 5  # 5=Sam, 6=Dim
+        is_weekend = now.weekday() >= 5  
         
-        # Si c'est le week-end et que weekend=false dans la config, on ne s'exécute pas
         if is_weekend and not config['schedule'].getboolean('weekend', False):
             logger.info("C'est le week-end et l'exécution le week-end est désactivée")
             return False
         
-        # Vérifier les jours de la semaine
         days_of_week = [int(d.strip()) for d in config['schedule'].get('days_of_week', '1,2,3,4,5').split(',')]
-        if now.weekday() + 1 not in days_of_week:  # weekday() renvoie 0 pour lundi, on veut 1
+        if now.weekday() + 1 not in days_of_week: 
             logger.info(f"Aujourd'hui n'est pas un jour d'exécution configuré (jour {now.weekday() + 1})")
             return False
         
-        # Vérifier l'heure de début et de fin
         start_time_str = config['schedule'].get('start_time')
         end_time_str = config['schedule'].get('end_time')
         
@@ -481,7 +450,6 @@ def run_single_cycle():
     """Exécute un seul cycle de surveillance des PDU"""
     logger.info(f"=== Début du cycle de surveillance - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
     
-    # Récupérer la liste des PDU à surveiller depuis la base de données
     pdus = get_pdus_to_monitor()
     
     if not pdus:
@@ -491,7 +459,6 @@ def run_single_cycle():
     
     logger.info(f"{len(pdus)} PDU(s) trouvée(s) dans la base de données")
     
-    # Pour chaque PDU, récupérer les métriques et les enregistrer
     for pdu in pdus:
         pdu_id = pdu['id']
         ip = pdu.get('ip')
@@ -505,10 +472,8 @@ def run_single_cycle():
         logger.info(f"Traitement de la PDU #{pdu_id} - {pdu.get('marque', 'Inconnu')} {pdu.get('modele', '')} ({ip})")
         
         try:
-            # Récupérer les métriques SNMP
             metrics = get_pdu_metrics(ip, community, outlet_count)
             
-            # Enregistrer dans la base de données
             if save_to_database(pdu_id, metrics):
                 logger.info(f"Données enregistrées avec succès pour la PDU {pdu_id}")
             else:
@@ -526,7 +491,6 @@ def main():
         logger.info(f"Version: 1.0.0")
         logger.info(f"Répertoire de travail: {os.getcwd()}")
         
-        # Mode d'exécution unique ou planifié
         is_interactive = sys.stdout.isatty()
         
         if is_interactive:
@@ -535,14 +499,12 @@ def main():
         else:
             logger.info("Mode non interactif détecté - Exécution planifiée")
             
-            # Boucle principale pour l'exécution planifiée
             while True:
                 if should_run_now():
                     run_single_cycle()
                 else:
                     logger.debug("En attente du prochain créneau d'exécution...")
                 
-                # Attendre l'intervalle configuré avant la prochaine exécution
                 interval = int(config['schedule'].get('interval_minutes', '5')) * 60  # en secondes
                 logger.debug(f"Attente de {interval} secondes avant la prochaine exécution...")
                 time.sleep(interval)
@@ -557,7 +519,6 @@ def main():
     return 0
 
 if __name__ == "__main__":
-    # Code de sortie par défaut
     exit_code = 0
     
     try:
@@ -569,7 +530,6 @@ if __name__ == "__main__":
         logger.critical(f"Erreur inattendue: {e}", exc_info=True)
         exit_code = 1
     
-    # Pause sous Windows en mode interactif pour voir les messages
     if os.name == 'nt' and sys.stdout.isatty():
         input("\nAppuyez sur Entrée pour quitter...")
     

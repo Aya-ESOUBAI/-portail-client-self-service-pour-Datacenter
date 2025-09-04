@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
-// Simple notification function as fallback
 const notify = {
   success: (message) => window.alert(`Succès: ${message}`),
   error: (message) => window.alert(`Erreur: ${message}`)
@@ -222,7 +221,6 @@ function AjouterRack() {
                   <button
                     type="button"
                     onClick={() => {
-                      // Fonction pour tester la connexion SNMP
                       console.log('Tester la connexion SNMP');
                     }}
                     className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
@@ -336,7 +334,6 @@ function AjouterRack() {
                   <button
                     type="button"
                     onClick={() => {
-                      // Fonction pour tester la connexion SNMP
                       console.log('Tester la connexion SNMP');
                     }}
                     className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"

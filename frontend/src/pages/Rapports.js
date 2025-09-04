@@ -8,24 +8,21 @@ function Rapports() {
   const [error, setError] = useState('');
   const [userInfo, setUserInfo] = useState(null);
   
-  // États pour les données des graphiques
   const [temperatureData, setTemperatureData] = useState([]);
   const [consumptionData, setConsumptionData] = useState([]);
   const [accessData, setAccessData] = useState([]);
   const [rackList, setRackList] = useState([]);
   
-  // États pour les filtres
   const [selectedRack, setSelectedRack] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [dataType, setDataType] = useState('temperature'); // temperature, consumption, access
+  const [dataType, setDataType] = useState('temperature'); 
   const [showPowerChart, setShowPowerChart] = useState(false);
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     setUserInfo(currentUser);
     
-    // Définir la période par défaut (7 derniers jours)
     const end = new Date();
     const start = new Date();
     start.setDate(start.getDate() - 7);
@@ -136,7 +133,7 @@ function Rapports() {
   };
 
   const renderTemperatureChart = () => {
-    // Largeur dynamique : 100% si <=10 points, sinon 1200px
+
     const tempWidth = temperatureData.length > 10 ? 1200 : '100%';
     return (
       <div className="chart-container">
@@ -250,8 +247,6 @@ function Rapports() {
   );
 
   const renderAccessChart = () => {
-    // Grouper les accès par utilisateur
-    // Filtrer uniquement les accès physiques validés
     const validatedAccess = accessData.filter(a => a.statut === 'VALIDEE');
     const accessByUser = validatedAccess.reduce((acc, access) => {
       const userName = access.utilisateur_nom || 'Utilisateur inconnu';

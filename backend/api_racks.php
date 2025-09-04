@@ -2,30 +2,23 @@
 header('Content-Type: application/json');
 require_once 'config.php';
 
-// Fonction pour envoyer une réponse JSON
 function send_json($data, $status_code = 200) {
     http_response_code($status_code);
     echo json_encode($data);
     exit;
 }
 
-// Récupérer la méthode HTTP
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Gestion des CORS
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-// Gestion des requêtes OPTIONS (prévol)
 if ($method === 'OPTIONS') {
     send_json(['message' => 'OK']);
 }
 
-// Vérifier l'authentification (à implémenter selon votre système d'authentification)
 function check_auth() {
-    // Implémentez votre logique d'authentification ici
-    // Par exemple, vérification du token JWT
     return true;
 }
 

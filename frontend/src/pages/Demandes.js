@@ -32,22 +32,27 @@ function Demandes() {
     try {
       setLoading(true);
       const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      console.log('Utilisateur courant:', currentUser);
+      
+      if (!currentUser || !currentUser.role) {
+        setError('Erreur: Utilisateur non connecté');
+        return;
+      }
       
       if (currentUser.role === 'Admin') {
-        // Pour les admins, charger toutes les données
-        console.log('Chargement des demandes pour admin');
         const [demandesRes, statsRes, directionRes] = await Promise.all([
           api.get('/demandes').catch(err => {
             console.error('Erreur lors de la récupération des demandes:', err);
+            setError('Erreur lors du chargement des demandes');
             return { data: [] };
           }),
           api.get('/demandes-stats').catch(err => {
             console.error('Erreur lors de la récupération des stats:', err);
+            setError('Erreur lors du chargement des statistiques');
             return { data: [] };
           }),
           api.get('/demandes-by-direction').catch(err => {
             console.error('Erreur lors de la récupération des demandes par direction:', err);
+            setError('Erreur lors du chargement des demandes par direction');
             return { data: [] };
           })
         ]);
@@ -55,7 +60,6 @@ function Demandes() {
         console.log('Réponse complète de /demandes:', demandesRes);
         console.log('Données brutes des demandes:', demandesRes.data);
         
-        // Vérifier si la réponse contient une erreur
         if (demandesRes.data && demandesRes.data.error) {
           console.error('Erreur du serveur:', demandesRes.data.error);
           setError('Erreur lors du chargement des demandes: ' + (demandesRes.data.details || demandesRes.data.error));
@@ -68,18 +72,16 @@ function Demandes() {
         setStats(Array.isArray(statsRes.data) ? statsRes.data : []);
         setDemandesByDirection(Array.isArray(directionRes.data) ? directionRes.data : []);
       } else if (currentUser.role === 'Direction') {
-        // Pour les directions, charger seulement leurs demandes
         const demandesRes = await api.get('/demandes');
         const allDemandes = Array.isArray(demandesRes.data) ? demandesRes.data : [];
         
-        // Filtrer seulement les demandes de cette direction
         const userDemandes = allDemandes.filter(demande => 
           demande.utilisateur_id === currentUser.id || demande.direction_id === currentUser.direction_id
         );
         
         setDemandes(userDemandes);
-        setStats([]); // Pas de stats globales pour les directions
-        setDemandesByDirection([]); // Pas de vue par direction pour les directions
+        setStats([]); 
+        setDemandesByDirection([]);
       }
     } catch (err) {
       setError('Erreur lors du chargement des données de demandes');
@@ -94,7 +96,7 @@ function Demandes() {
       setLoading(true);
       await api.post(`/demandes/${demandeId}/${action}`);
       setSuccess(`Demande ${action === 'valider' ? 'validée' : action === 'rejeter' ? 'rejetée' : 'marquée comme terminée'} avec succès`);
-      loadDemandesData(); // Recharger les données
+      loadDemandesData(); 
     } catch (err) {
       setError(`Erreur lors de l'action sur la demande`);
       console.error('Erreur action:', err);
@@ -110,11 +112,10 @@ function Demandes() {
       
       const formData = new FormData();
       formData.append('type', newDemande.type);
-      // Ajout des identifiants utilisateur et direction
+
       if (userInfo?.id) formData.append('utilisateur_id', userInfo.id);
       if (userInfo?.direction_id) formData.append('direction_id', userInfo.direction_id);
 
-      // Ajouter les champs pour les demandes d'accès
       if (newDemande.type === 'ACCES') {
         formData.append('nom', newDemande.nom);
         formData.append('prenom', newDemande.prenom);
@@ -125,7 +126,6 @@ function Demandes() {
         }
       }
 
-      // Ajouter les champs pour les demandes d'installation et retrait
       if (newDemande.type === 'INSTALLATION' || newDemande.type === 'RETRAIT') {
         formData.append('nom_equipement', newDemande.nom_equipement);
         formData.append('serial_number', newDemande.serial_number);
@@ -145,11 +145,11 @@ function Demandes() {
         prenom: '',
         cin: '',
         code: '',
-        date_acces: new Date().toISOString().split('T')[0], // Date du système par défaut
+        date_acces: new Date().toISOString().split('T')[0], 
         nom_equipement: '',
         serial_number: ''
       });
-      loadDemandesData(); // Recharger les données
+      loadDemandesData(); 
     } catch (err) {
       setError('Erreur lors de la création de la demande');
       console.error('Erreur création:', err);
@@ -164,12 +164,10 @@ function Demandes() {
 
   const handleDownloadPDF = async (demandeId) => {
     try {
-      // Télécharger le PDF via l'API
       const response = await api.get(`/demandes/${demandeId}/pdf`, {
         responseType: 'blob'
       });
       
-      // Créer un blob et télécharger le fichier
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -231,11 +229,11 @@ function Demandes() {
 
   const getPageTitle = () => {
     if (userInfo?.role === 'Admin') {
-          return 'Gestion des Demandes';
-  } else if (userInfo?.role === 'Direction') {
-    return 'Mes Demandes';
-  }
-  return 'Demandes';
+      return 'Gestion des Demandes';
+    } else if (userInfo?.role === 'Direction') {
+      return 'Mes Demandes';
+    }
+    return 'Demandes';
   };
 
   const getPageDescription = () => {
@@ -305,13 +303,20 @@ function Demandes() {
                   </div>
                   
                   <div className="form-group">
-                    <label>CIN *:</label>
+                    <label>CIN * (format: 6 chiffres):</label>
                     <input 
                       type="text" 
                       value={newDemande.cin}
-                      onChange={(e) => setNewDemande(prev => ({ ...prev, cin: e.target.value }))}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || /^\d{0,6}$/.test(value)) {
+                          setNewDemande(prev => ({ ...prev, cin: value }));
+                        }
+                      }}
                       required
-                      placeholder="Numéro CIN"
+                      pattern="\d{6}"
+                      title="Le CIN doit contenir exactement 6 chiffres"
+                      placeholder="123456"
                     />
                   </div>
                   
@@ -320,9 +325,24 @@ function Demandes() {
                     <input 
                       type="date" 
                       value={newDemande.date_acces}
-                      onChange={(e) => setNewDemande(prev => ({ ...prev, date_acces: e.target.value }))}
+                      onChange={(e) => {
+                        const selectedDate = new Date(e.target.value);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        
+                        if (selectedDate >= today) {
+                          setNewDemande(prev => ({ ...prev, date_acces: e.target.value }));
+                        } else {
+                          setError('La date ne peut pas être dans le passé');
+                        }
+                      }}
                       required
-                      min={new Date().toISOString().split('T')[0]} // Pas de date dans le passé
+                      min={new Date().toISOString().split('T')[0]}
+                      max={(() => {
+                        const maxDate = new Date();
+                        maxDate.setMonth(maxDate.getMonth() + 3); 
+                        return maxDate.toISOString().split('T')[0];
+                      })()}
                     />
                   </div>
                   
@@ -413,7 +433,7 @@ function Demandes() {
       {error && <div className="error-message">{error}</div>}
 
       {/* Contenu principal des demandes */}
-      <div className="demandes-content">
+      {(<div className="demandes-content">
           <div className="demandes-list">
             <h2>{userInfo?.role === 'Direction' ? 'Mes Demandes' : 'Liste des Demandes'}</h2>
             {loading ? (

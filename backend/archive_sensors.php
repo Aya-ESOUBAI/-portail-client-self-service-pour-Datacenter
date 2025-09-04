@@ -1,13 +1,11 @@
 <?php
 require_once 'config.php';
 
-// Script d'archivage des données capteurs vers donneeenv
 function archiveOldSensorData() {
     $pdo = getPDO();
     $now = date('Y-m-d H:i:s');
     $yesterday = date('Y-m-d H:i:s', strtotime('-1 day'));
 
-    // 1. Capteurs climatiques
     $climeQuery = 'SELECT * FROM capteurdeclime WHERE date_mesure < ?';
     $climeStmt = $pdo->prepare($climeQuery);
     $climeStmt->execute([$yesterday]);
@@ -24,7 +22,6 @@ function archiveOldSensorData() {
         ]);
     }
 
-    // 2. Capteurs électriques
     $elecQuery = 'SELECT * FROM capteurelectrique WHERE date_mesure < ?';
     $elecStmt = $pdo->prepare($elecQuery);
     $elecStmt->execute([$yesterday]);
@@ -41,12 +38,8 @@ function archiveOldSensorData() {
         ]);
     }
 
-    // Optionnel : supprimer les données transférées
-    // $pdo->prepare('DELETE FROM capteurdeclime WHERE date_mesure < ?')->execute([$yesterday]);
-    // $pdo->prepare('DELETE FROM capteurelectrique WHERE date_mesure < ?')->execute([$yesterday]);
 }
 
-// Exécution directe si appelé en CLI
 if (php_sapi_name() === 'cli') {
     archiveOldSensorData();
     echo "Archivage terminé.\n";

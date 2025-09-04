@@ -9,7 +9,6 @@ function Consommation() {
   const [userInfo, setUserInfo] = useState(null);
 
   useEffect(() => {
-    // Récupérer les informations de l'utilisateur connecté
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     setUserInfo(currentUser);
 
@@ -17,7 +16,6 @@ function Consommation() {
       try {
         setLoading(true);
         
-        // Charger les données complètes des racks avec PDUs et blocs
         const response = await api.get(`/raks-complete-data/${currentUser.id || 1}`);
         setRacksData(Array.isArray(response.data) ? response.data : []);
         
@@ -33,7 +31,6 @@ function Consommation() {
     loadRacksData();
   }, []);
 
-  // Fonction pour obtenir la couleur selon l'intensité
   const getIntensityColor = (intensity) => {
     if (!intensity || intensity === 0) return 'text-gray-500';
     const value = parseFloat(intensity);
@@ -42,7 +39,6 @@ function Consommation() {
     return 'text-red-600';
   };
 
-  // Fonction pour formater l'intensité
   const formatIntensity = (intensity, unite) => {
     if (!intensity || intensity === 0) return 'N/A';
     return `${parseFloat(intensity).toFixed(1)} ${unite || 'A'}`;

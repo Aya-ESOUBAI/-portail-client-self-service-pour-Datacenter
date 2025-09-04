@@ -11,7 +11,6 @@ function login($data) {
     $stmt->execute([$data['email']]);
     $user = $stmt->fetch();
     if ($user && password_verify($data['mot_de_passe'], $user['mot_de_passe'])) {
-        // Générer un token simple (à remplacer par JWT en prod)
         $token = base64_encode(random_bytes(32));
         return ['token' => $token, 'user' => $user];
     }

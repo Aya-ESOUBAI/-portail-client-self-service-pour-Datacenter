@@ -23,41 +23,33 @@ function getAlertThresholds() {
     return $stmt->fetchAll();
 }
 
-// Fonction pour vérifier les seuils critiques et envoyer des notifications
 function checkCriticalThresholds() {
     $pdo = getPDO();
     
-    // Récupérer tous les seuils critiques
     $thresholds = getAlertThresholds();
     
     foreach ($thresholds as $threshold) {
-        // Vérifier les données actuelles selon le type
         $currentValue = getCurrentValue($threshold['type']);
         
         if ($currentValue !== null && $currentValue > $threshold['valeur_seuil']) {
-            // Seuil critique dépassé - créer une alerte et envoyer des notifications
             $alertData = [
                 'type' => $threshold['type'],
                 'message' => "Seuil critique dépassé: {$currentValue} > {$threshold['valeur_seuil']} {$threshold['unite']}",
-                'rack_id' => null  // Vous pouvez ajuster cela si nécessaire
+                'rack_id' => null  
             ];
             
-            // Créer l'alerte
             store($alertData);
             
-            // Envoyer les notifications
             sendCriticalNotifications($threshold, $currentValue);
         }
     }
 }
 
-// Fonction pour obtenir la valeur actuelle selon le type
 function getCurrentValue($type) {
     $pdo = getPDO();
     
     switch ($type) {
         case 'temperature':
-            // Récupérer la température moyenne actuelle
             $stmt = $pdo->query('
                 SELECT AVG(cd.valeur) as moyenne 
                 FROM capteurdeclime cd 
@@ -68,7 +60,6 @@ function getCurrentValue($type) {
             return $result ? $result['moyenne'] : null;
             
         case 'energie':
-            // Récupérer la consommation énergétique moyenne actuelle
             $stmt = $pdo->query('
                 SELECT AVG(ce.valeur) as moyenne 
                 FROM capteurelectrique ce 
@@ -78,7 +69,6 @@ function getCurrentValue($type) {
             return $result ? $result['moyenne'] : null;
             
         case 'humidite':
-            // Récupérer l'humidité moyenne actuelle
             $stmt = $pdo->query('
                 SELECT AVG(cd.valeur) as moyenne 
                 FROM capteurdeclime cd 
@@ -93,15 +83,12 @@ function getCurrentValue($type) {
     }
 }
 
-// Fonction pour envoyer les notifications critiques
 function sendCriticalNotifications($threshold, $currentValue) {
     $pdo = getPDO();
     
-    // Récupérer tous les administrateurs
     $stmt = $pdo->query('SELECT * FROM utilisateur WHERE role = "Admin"');
     $admins = $stmt->fetchAll();
     
-    // Récupérer toutes les directions
     $stmt = $pdo->query('SELECT * FROM direction');
     $directions = $stmt->fetchAll();
     
@@ -113,7 +100,6 @@ function sendCriticalNotifications($threshold, $currentValue) {
     $message .= "Date: " . date('d/m/Y H:i:s') . "\n\n";
     $message .= "Action requise immédiatement!";
     
-    // Envoyer aux administrateurs
     foreach ($admins as $admin) {
         if (!empty($admin['email'])) {
             sendEmail($admin['email'], "Alerte Critique - {$threshold['type']}", $message);
@@ -123,7 +109,6 @@ function sendCriticalNotifications($threshold, $currentValue) {
         }
     }
     
-    // Envoyer aux directions
     foreach ($directions as $direction) {
         if (!empty($direction['email_contact'])) {
             sendEmail($direction['email_contact'], "Alerte Critique - {$threshold['type']}", $message);
@@ -134,24 +119,17 @@ function sendCriticalNotifications($threshold, $currentValue) {
     }
 }
 
-// Fonction pour envoyer un email
 function sendEmail($to, $subject, $message) {
-    // Configuration pour l'envoi d'email
     $headers = "From: datacenter@example.com\r\n";
     $headers .= "Reply-To: datacenter@example.com\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
     
-    // Envoi de l'email (dans un environnement de production, utilisez une bibliothèque comme PHPMailer)
     mail($to, $subject, $message, $headers);
     
-    // Log de l'envoi
     error_log("Email envoyé à {$to}: {$subject}");
 }
 
-// Fonction pour envoyer un SMS (simulation - dans un environnement réel, utilisez un service SMS)
 function sendSMS($phone, $message) {
-    // Simulation d'envoi SMS
-    // Dans un environnement réel, utilisez un service comme Twilio, Nexmo, etc.
     error_log("SMS envoyé à {$phone}: {$message}");
 }
 
@@ -177,7 +155,6 @@ function storeThreshold($data) {
         $data['rack_id'] ?? null
     ]);
     
-    // Vérifier immédiatement si le seuil est dépassé
     checkCriticalThresholds();
     
     return ['message' => 'Seuil critique créé et vérifié'];
@@ -211,7 +188,6 @@ function updateThreshold($id, $data) {
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     
-    // Vérifier immédiatement si le seuil est dépassé
     checkCriticalThresholds();
     
     return ['message' => 'Seuil critique mis à jour et vérifié'];
