@@ -85,8 +85,8 @@ CREATE TABLE seuil_alerte (
     type VARCHAR(50) NOT NULL,
     valeur_seuil FLOAT,
     message TEXT NOT NULL,
-    rack_id INT,
-    FOREIGN KEY (rack_id) REFERENCES rak(id) ON DELETE SET NULL
+    rak_id INT,
+    FOREIGN KEY (rak_id) REFERENCES rak(id) ON DELETE SET NULL
 );
 
 CREATE TABLE alerte (
@@ -94,8 +94,8 @@ CREATE TABLE alerte (
     type VARCHAR(50) NOT NULL,
     message TEXT NOT NULL,
     date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    rack_id INT,
-    FOREIGN KEY (rack_id) REFERENCES rak(id) ON DELETE SET NULL
+    rak_id INT,
+    FOREIGN KEY (rak_id) REFERENCES rak(id) ON DELETE SET NULL
 );
 
 CREATE TABLE donneeenv (

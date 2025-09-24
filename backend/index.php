@@ -78,7 +78,9 @@ $input = json_decode(file_get_contents('php://input'), true) ?? [];
 if ($method === 'GET') {
     $result = $params ? call_user_func_array($function, $params) : $function();
 } elseif ($method === 'POST') {
-    $result = $function($input);
+    // Si la route POST contient des paramètres (ex: /demandes/{id}/valider),
+    // on doit passer ces paramètres à la fonction cible.
+    $result = $params ? call_user_func_array($function, $params) : $function($input);
 } elseif ($method === 'PUT') {
     $result = call_user_func_array($function, array_merge($params, [$input]));
 } elseif ($method === 'DELETE') {

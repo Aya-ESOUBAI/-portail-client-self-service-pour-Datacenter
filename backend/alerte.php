@@ -19,7 +19,7 @@ function show($id) {
 
 function getAlertThresholds() {
     $pdo = getPDO();
-    $stmt = $pdo->query('SELECT id, type, valeur_seuil, message, rack_id FROM seuil_alerte ORDER BY type, valeur_seuil');
+    $stmt = $pdo->query('SELECT id, `type`, valeur_seuil, message, rack_id FROM seuil_alerte ORDER BY `type`, valeur_seuil');
     return $stmt->fetchAll();
 }
 
@@ -34,7 +34,7 @@ function checkCriticalThresholds() {
         if ($currentValue !== null && $currentValue > $threshold['valeur_seuil']) {
             $alertData = [
                 'type' => $threshold['type'],
-                'message' => "Seuil critique dépassé: {$currentValue} > {$threshold['valeur_seuil']} {$threshold['unite']}",
+                'message' => "Seuil critique dépassé: {$currentValue} > {$threshold['valeur_seuil']}" . (isset($threshold['unite']) ? " {$threshold['unite']}" : ''),
                 'rack_id' => null  
             ];
             
@@ -135,11 +135,11 @@ function sendSMS($phone, $message) {
 
 function store($data) {
     $pdo = getPDO();
-    $stmt = $pdo->prepare('INSERT INTO alerte (type, message, statut, rack_id) VALUES (?, ?, ?, ?)');
+    // La table `alerte` ne contient pas la colonne `statut` dans le schéma SQL fourni
+    $stmt = $pdo->prepare('INSERT INTO alerte (`type`, message, rack_id) VALUES (?, ?, ?)');
     $stmt->execute([
         $data['type'],
         $data['message'] ?? 'Alerte système',
-        $data['statut'] ?? 'active',
         $data['rack_id'] ?? null
     ]);
     return ['message' => 'Alerte créée'];
@@ -147,11 +147,12 @@ function store($data) {
 
 function storeThreshold($data) {
     $pdo = getPDO();
-    $stmt = $pdo->prepare('INSERT INTO seuil_alerte (type, valeur_seuil, message, rack_id) VALUES (?, ?, ?, ?)');
+    $stmt = $pdo->prepare('INSERT INTO seuil_alerte (`type`, valeur_seuil, message, rack_id) VALUES (?, ?, ?, ?)');
     $stmt->execute([
         $data['type'],
         $data['valeur_seuil'],
-        $data['message'] ?? null,
+        // Le frontend envoie souvent `description`/`unite`. On renseigne `message` depuis `description` si présent.
+        $data['message'] ?? ($data['description'] ?? 'Seuil critique'),
         $data['rack_id'] ?? null
     ]);
     
@@ -165,7 +166,8 @@ function update($id, $data) {
     $fields = [];
     $params = [];
     foreach ($data as $key => $value) {
-        $fields[] = "$key = ?";
+        // Encadrer les noms de colonnes avec des backticks pour éviter les collisions (ex: `type`)
+        $fields[] = "`$key` = ?";
         $params[] = $value;
     }
     $params[] = $id;
@@ -180,7 +182,7 @@ function updateThreshold($id, $data) {
     $fields = [];
     $params = [];
     foreach ($data as $key => $value) {
-        $fields[] = "$key = ?";
+        $fields[] = "`$key` = ?";
         $params[] = $value;
     }
     $params[] = $id;
